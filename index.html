@@ -19,6 +19,7 @@
             --ease: cubic-bezier(.4,0,.2,1); --ease-spring: cubic-bezier(.34,1.56,.64,1);
             --ease-smooth: cubic-bezier(.22,.61,.36,1); --nav-height: 64px; --header-height: 52px;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --card-size: 150px; /* حجم موحد لكل البطاقات على جميع الشاشات */
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior:smooth; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
@@ -89,9 +90,28 @@
         .section-title { font-size:.9rem; font-weight:700; color:var(--text-bright); display:flex; align-items:center; gap:8px; }
         .icon-bar { width:3px; height:18px; background:var(--accent); border-radius:3px; }
         .scroll-row { display:flex; gap:clamp(8px,1.4vw,12px); overflow-x:auto; padding-bottom:6px; scroll-snap-type:x proximity; }
-        .scroll-row .card { min-width:110px; flex-shrink:0; scroll-snap-align:start; }
-        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:8px; }
-        .card { background:var(--card); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.3s; border:1px solid transparent; }
+
+        /* بطاقات موحدة الحجم في كل مكان */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
+            gap: clamp(6px, 1.2vw, 10px);
+        }
+        .scroll-row .card {
+            min-width: var(--card-size) !important;
+            max-width: var(--card-size) !important;
+            flex-shrink: 0;
+            scroll-snap-align: start;
+        }
+        .card { 
+            background:var(--card); 
+            border-radius:var(--radius); 
+            overflow:hidden; 
+            cursor:pointer; 
+            transition:.3s; 
+            border:1px solid transparent; 
+            width: 100%;
+        }
         .card:hover { transform:translateY(-4px); border-color:var(--border-light); }
         .card:active { transform:scale(.96); }
         .card-img-wrap { position:relative; width:100%; aspect-ratio:2/3; overflow:hidden; background:var(--surface); }
@@ -99,12 +119,12 @@
         .card-rating-badge { position:absolute; top:5px; right:5px; background:rgba(0,0,0,.7); color:var(--gold); font-size:.65rem; padding:2px 7px; border-radius:8px; backdrop-filter:blur(4px); z-index:2; }
         .card-play-hover { position:absolute; inset:0; background:rgba(5,7,13,.65); display:flex; align-items:center; justify-content:center; opacity:0; transition:.3s; z-index:3; }
         .card:hover .card-play-hover { opacity:1; }
-        .play-circle-sm { width:38px; height:38px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 24px rgba(230,57,70,.5); }
-        .card-info { padding:8px 10px; background:var(--card); }
-        .card-title { font-size:.72rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-bright); }
-        .card-sub { font-size:.62rem; color:var(--text-muted); display:flex; gap:6px; align-items:center; }
-        .card-type-badge { font-size:.58rem; background:var(--surface2); padding:1px 6px; border-radius:6px; border:1px solid var(--border); }
-        .remove-watch-btn { position:absolute; top:5px; left:5px; background:rgba(0,0,0,.7); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; z-index:5; display:flex; align-items:center; justify-content:center; font-size:.8rem; }
+        .play-circle-sm { width:32px; height:32px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 24px rgba(230,57,70,.5); }
+        .card-info { padding:6px 8px; background:var(--card); }
+        .card-title { font-size:clamp(.6rem, 1vw, .7rem); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text-bright); }
+        .card-sub { font-size:.6rem; color:var(--text-muted); display:flex; gap:4px; align-items:center; }
+        .card-type-badge { font-size:.55rem; background:var(--surface2); padding:1px 5px; border-radius:6px; border:1px solid var(--border); }
+        .remove-watch-btn { position:absolute; top:5px; left:5px; background:rgba(0,0,0,.7); color:#fff; border:none; width:22px; height:22px; border-radius:50%; cursor:pointer; z-index:5; display:flex; align-items:center; justify-content:center; font-size:.7rem; }
 
         .filter-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
         .filter-chip, .filter-select { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:5px 12px; font-size:.7rem; cursor:pointer; transition:.2s; }
@@ -124,28 +144,16 @@
         .tag { background:var(--card); border:1px solid var(--border); padding:3px 10px; font-size:.68rem; border-radius:6px; color:var(--text-muted); }
         .tag.gold { color:var(--gold); border-color:rgba(240,192,64,.25); }
         #modal-overview-text { color:#b0b8c8; font-size:.8rem; line-height:1.7; }
-        .empty-state { text-align:center; padding:40px; color:var(--text-dim); }
-        .skel { background:linear-gradient(100deg, var(--card) 25%, var(--surface2) 50%, var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:14px; }
-        .skel-poster { width:100%; aspect-ratio:2/3; border-radius:14px; }
+        .empty-state { text-align:center; padding:40px; color:var(--text-dim); font-size:.8rem; }
+        .skel { background:linear-gradient(100deg, var(--card) 25%, var(--surface2) 50%, var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--radius); }
+        .skel-poster { width:100%; aspect-ratio:2/3; border-radius:var(--radius); }
         @keyframes shimmer { to { background-position:-200% 0; } }
-        #toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--card); padding:10px 20px; border-radius:24px; z-index:300; opacity:0; transition:.3s; border:1px solid var(--border); }
+        #toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--card); padding:10px 20px; border-radius:24px; z-index:300; opacity:0; transition:.3s; border:1px solid var(--border); font-size:.75rem; white-space:nowrap; }
         #toast.show { opacity:1; }
 
-        /* ========== تصغير البطاقات على الهاتف (جميعها) ========== */
+        /* تصغير الشريط السفلي للهاتف */
         @media (max-width: 480px) {
-            .scroll-row .card { min-width: 80px !important; }
-            .scroll-row .card .card-title { font-size: 0.55rem; }
-            .scroll-row .card .card-sub, .scroll-row .card .card-type-badge { font-size: 0.5rem; }
-            .scroll-row .card .card-rating-badge { font-size: 0.5rem; padding: 1px 4px; top: 3px; right: 3px; }
-            .scroll-row .card .play-circle-sm { width: 28px; height: 28px; }
-
-            .grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
-            .grid .card .card-title { font-size: 0.55rem; }
-            .grid .card .card-sub, .grid .card .card-type-badge { font-size: 0.5rem; }
-            .grid .card .card-rating-badge { font-size: 0.5rem; padding: 1px 4px; top: 3px; right: 3px; }
-            .grid .card .play-circle-sm { width: 28px; height: 28px; }
-
-            .card-info { padding: 5px 6px; }
+            :root { --card-size: 110px; }
             #bottom-nav { padding: 6px 8px; border-radius: 35px; gap: 0; }
             .nav-item { padding: 6px 10px; min-width: 48px; border-radius: 28px; }
             .nav-item svg { width: 20px; height: 20px; }
@@ -154,35 +162,17 @@
     </style>
 </head>
 <body>
-<header id="app-header">
-    <div class="header-logo">🎬 CineStream</div>
-    <button class="header-btn" id="global-search-btn">🔍</button>
-</header>
+<header id="app-header"><div class="header-logo">🎬 CineStream</div><button class="header-btn" id="global-search-btn">🔍</button></header>
 
 <div id="app-content" class="home-view">
     <!-- HOME -->
     <div class="view-panel active" id="view-home">
-        <section id="hero-slider">
-            <div class="slider-track" id="slider-track"></div>
-            <div class="slider-dots" id="slider-dots"></div>
-        </section>
+        <section id="hero-slider"><div class="slider-track" id="slider-track"></div><div class="slider-dots" id="slider-dots"></div></section>
         <div class="content-area">
-            <div class="section-block">
-                <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🔥 رائج الآن</div></div>
-                <div class="scroll-row" id="trending-row"></div>
-            </div>
-            <div class="section-block">
-                <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام شائعة</div></div>
-                <div class="grid" id="grid-home-movies"></div>
-            </div>
-            <div class="section-block">
-                <div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات شائعة</div></div>
-                <div class="grid" id="grid-home-tv"></div>
-            </div>
-            <div class="section-block">
-                <div class="section-head"><div class="section-title"><span class="icon-bar"></span>⭐ الأعلى تقييماً</div></div>
-                <div class="scroll-row" id="top-rated-row"></div>
-            </div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>🔥 رائج الآن</div></div><div class="scroll-row" id="trending-row"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام شائعة</div></div><div class="grid" id="grid-home-movies"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات شائعة</div></div><div class="grid" id="grid-home-tv"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>⭐ الأعلى تقييماً</div></div><div class="scroll-row" id="top-rated-row"></div></div>
         </div>
     </div>
 
@@ -235,11 +225,11 @@
         </div>
     </div>
 
-    <!-- CONTINUE WATCHING -->
+    <!-- CONTINUE WATCHING (شبكة مثل المحفوظات) -->
     <div class="view-panel" id="view-continue">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>▶ متابعة المشاهدة</div></div>
-            <div class="scroll-row" id="continue-row"></div>
+            <div class="grid" id="continue-grid"></div>
             <div class="empty-state" id="continue-empty" style="display:none;">لا يوجد عناصر لمتابعتها</div>
         </div>
     </div>
@@ -263,19 +253,7 @@
     <button class="nav-item" data-view="saved"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg><span>محفوظات</span></button>
 </nav>
 
-<div id="modal-overlay" onclick="if(event.target===this)closeModal()">
-    <div id="modal-box">
-        <div id="modal-player-wrap"></div>
-        <div id="modal-details">
-            <div class="modal-top">
-                <div id="modal-movie-title">...</div>
-                <button class="modal-close-btn" onclick="closeModal()">✕</button>
-            </div>
-            <div class="modal-tags" id="modal-tags"></div>
-            <div id="modal-overview-text"></div>
-        </div>
-    </div>
-</div>
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()"><div id="modal-box"><div id="modal-player-wrap"></div><div id="modal-details"><div class="modal-top"><div id="modal-movie-title">...</div><button class="modal-close-btn" onclick="closeModal()">✕</button></div><div class="modal-tags" id="modal-tags"></div><div id="modal-overview-text"></div></div></div></div>
 <div id="toast"></div>
 
 <script>
@@ -325,24 +303,24 @@
     }
 
     function renderContinueView(){
-        const row = document.getElementById('continue-row');
+        const grid = document.getElementById('continue-grid');
         const empty = document.getElementById('continue-empty');
-        if(!continueWatching.length){ row.innerHTML = ''; empty.style.display = 'block'; return; }
+        if(!continueWatching.length){ grid.innerHTML = ''; empty.style.display = 'block'; return; }
         empty.style.display = 'none';
-        row.innerHTML = '';
+        grid.innerHTML = '';
         continueWatching.forEach(item=>{
             const card = document.createElement('div'); card.className='card'; card.style.position='relative';
-            const poster=item.poster||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e' width='200' height='300'/%3E%3Ctext fill='%237b8296' font-size='36' x='100' y='160' text-anchor='middle'%3E🎬%3C/text%3E%3C/svg%3E`;
+            const poster=item.poster||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e'/%3E%3C/svg%3E`;
             card.innerHTML=`<div class="card-img-wrap"><img src="${poster}" alt="${item.title}"><div class="card-play-hover"><div class="play-circle-sm">▶</div></div></div><div class="card-info"><div class="card-title">${item.title}</div></div><button class="remove-watch-btn">✕</button>`;
             card.querySelector('.remove-watch-btn').addEventListener('click',(e)=>{e.stopPropagation(); removeFromContinueWatching(item.id,item.type);});
             card.addEventListener('click',()=>openModal(item.id,item.type));
-            row.appendChild(card);
+            grid.appendChild(card);
         });
     }
 
     function createCard(m,type){
         const card=document.createElement('div'); card.className='card'; card.tabIndex=0;
-        const poster=m.poster_path?`${IMG}/w342${m.poster_path}`:`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e' width='200' height='300'/%3E%3Ctext fill='%237b8296' font-size='36' x='100' y='160' text-anchor='middle'%3E🎬%3C/text%3E%3C/svg%3E`;
+        const poster=m.poster_path?`${IMG}/w342${m.poster_path}`:`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e'/%3E%3C/svg%3E`;
         const title=m.title||m.name||'—';
         const year=(m.release_date||m.first_air_date||'').slice(0,4)||'—';
         const rating=m.vote_average?m.vote_average.toFixed(1):'—';
@@ -413,19 +391,9 @@
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
         let endpoint='/movie/'+movieTab, params={page:moviePage};
         const hasFilters = movieYear||movieGenre||movieCompany;
-        if(hasFilters){
-            endpoint='/discover/movie'; params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc';
-            if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; }
-            if(movieGenre) params.with_genres=movieGenre;
-            if(movieCompany) params.with_companies=movieCompany;
-        } else { if(movieYear) params.primary_release_year=movieYear; if(movieGenre) params.with_genres=movieGenre; if(movieCompany) params.with_companies=movieCompany; }
-        try{
-            const d=await tmdb(endpoint,params);
-            if(reset) grid.innerHTML='';
-            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'movie')));
-            document.getElementById('btn-more-movies').style.display = d.page < d.total_pages ? 'block' : 'none';
-            if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>';
-        }catch{ grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+        if(hasFilters){ endpoint='/discover/movie'; params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc'; if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; } if(movieGenre) params.with_genres=movieGenre; if(movieCompany) params.with_companies=movieCompany; }
+        else { if(movieYear) params.primary_release_year=movieYear; if(movieGenre) params.with_genres=movieGenre; if(movieCompany) params.with_companies=movieCompany; }
+        try{ const d=await tmdb(endpoint,params); if(reset) grid.innerHTML=''; d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'movie'))); document.getElementById('btn-more-movies').style.display = d.page < d.total_pages ? 'block' : 'none'; if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>'; }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
     document.getElementById('movie-quick-tabs').addEventListener('click',e=>{ const chip=e.target.closest('.filter-chip'); if(!chip)return; document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active')); chip.classList.add('active'); movieTab=chip.dataset.tab; moviePage=1; loadMoviesGrid(true); });
     document.getElementById('movie-year-select').addEventListener('change',function(){ movieYear=this.value; moviePage=1; loadMoviesGrid(true); });
@@ -448,18 +416,9 @@
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
         let endpoint='/tv/'+seriesTab, params={page:seriesPage};
         const hasFilters = seriesYear||seriesGenre||seriesCompany;
-        if(hasFilters){
-            endpoint='/discover/tv'; params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc';
-            if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; }
-            if(seriesGenre) params.with_genres=seriesGenre;
-            if(seriesCompany) params.with_companies=seriesCompany;
-        } else { if(seriesYear) params.first_air_date_year=seriesYear; if(seriesGenre) params.with_genres=seriesGenre; if(seriesCompany) params.with_companies=seriesCompany; }
-        try{
-            const d=await tmdb(endpoint,params);
-            if(reset) grid.innerHTML='';
-            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv')));
-            document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none';
-        }catch{ grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+        if(hasFilters){ endpoint='/discover/tv'; params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc'; if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; } if(seriesGenre) params.with_genres=seriesGenre; if(seriesCompany) params.with_companies=seriesCompany; }
+        else { if(seriesYear) params.first_air_date_year=seriesYear; if(seriesGenre) params.with_genres=seriesGenre; if(seriesCompany) params.with_companies=seriesCompany; }
+        try{ const d=await tmdb(endpoint,params); if(reset) grid.innerHTML=''; d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv'))); document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none'; }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
     document.getElementById('series-quick-tabs').addEventListener('click',e=>{ const chip=e.target.closest('.filter-chip'); if(!chip)return; document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active')); chip.classList.add('active'); seriesTab=chip.dataset.tab; seriesPage=1; loadSeriesGrid(true); });
     document.getElementById('series-year-select').addEventListener('change',function(){ seriesYear=this.value; seriesPage=1; loadSeriesGrid(true); });
@@ -482,9 +441,8 @@
     }
 
     async function performSearch(query){
-        const grid = document.getElementById('search-results-grid');
-        grid.innerHTML = '<div class="loading-msg">🔍 جارٍ البحث...</div>';
-        try { const d = await tmdb('/search/multi', { query }); grid.innerHTML = ''; const results = d.results.filter(m => m.media_type !== 'person' && m.poster_path); if(!results.length) grid.innerHTML = '<div class="empty-state">😕 لا توجد نتائج</div>'; else results.forEach(m => grid.appendChild(createCard(m, m.media_type || 'movie'))); } catch { grid.innerHTML = '<div class="loading-msg">⚠️ خطأ في البحث</div>'; }
+        const grid = document.getElementById('search-results-grid'); grid.innerHTML = '<div class="empty-state">🔍 جارٍ البحث...</div>';
+        try { const d = await tmdb('/search/multi', { query }); grid.innerHTML = ''; const results = d.results.filter(m => m.media_type !== 'person' && m.poster_path); if(!results.length) grid.innerHTML = '<div class="empty-state">😕 لا توجد نتائج</div>'; else results.forEach(m => grid.appendChild(createCard(m, m.media_type || 'movie'))); } catch { grid.innerHTML = '<div class="empty-state">⚠️ خطأ في البحث</div>'; }
     }
     document.getElementById('search-input').addEventListener('input', function(e){ clearTimeout(searchTimeout); const val = e.target.value.trim(); if(!val) { document.getElementById('search-results-grid').innerHTML = '<div class="empty-state">🔍 اكتب اسم العمل للبحث</div>'; return; } searchTimeout = setTimeout(() => performSearch(val), 400); });
 
