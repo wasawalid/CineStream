@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CineStream • سينما بلا حدود</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #05070d; --bg: #080b14; --surface: #0d111f; --surface2: #111827;
+            --card: #151d2e; --card-hover: #1a2338; --border: #1e2a40; --border-light: #263350;
+            --accent: #e63946; --accent-glow: #ff1744; --accent2: #ff6d3a; --gold: #f0c040;
+            --text: #dde1ea; --text-bright: #f4f6fb; --text-muted: #7b8296; --text-dim: #565d70;
+            --radius-xs: 6px; --radius-sm: 10px; --radius: 14px; --radius-lg: 18px; --radius-xl: 24px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,.3); --shadow: 0 6px 24px rgba(0,0,0,.4);
+            --shadow-lg: 0 14px 48px rgba(0,0,0,.55); --shadow-glow: 0 0 50px rgba(230,57,70,.2);
+            --ease: cubic-bezier(.4,0,.2,1); --ease-spring: cubic-bezier(.34,1.56,.64,1);
+            --ease-smooth: cubic-bezier(.22,.61,.36,1); --nav-height: 64px; --header-height: 52px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
+        body { font-family:'Cairo',sans-serif; background:var(--bg-deep); color:var(--text); min-height:100vh; overflow-x:hidden; line-height:1.6; padding-bottom:calc(var(--nav-height) + var(--safe-bottom) + 8px); -webkit-user-select:none; user-select:none; }
+        ::-webkit-scrollbar { width:3px; height:3px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+        #app-header { position:fixed; top:0; left:0; right:0; z-index:90; height:var(--header-height); display:flex; align-items:center; justify-content:space-between; padding:0 14px; background:rgba(8,11,20,.9); backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,.06); }
+        .header-logo { font-size:1.2rem; font-weight:900; background:linear-gradient(135deg,#e63946,#ff6d3a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .header-btn { width:36px; height:36px; border-radius:50%; background:var(--surface2); border:1px solid var(--border); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+
+       #bottom-nav {
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 95;
+    background: rgba(20, 24, 40, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 2px;
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    border-radius: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    width: max-content;
+    max-width: 95vw;
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    color: #8a8f9a;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 30px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 56px;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+}
+.nav-item svg {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+.nav-item span {
+    font-size: 0.6rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+.nav-item.active {
+    color: #ffffff;
+    background: rgba(229, 57, 70, 0.85);
+    box-shadow: 0 4px 15px rgba(229, 57, 70, 0.4);
+    border: none;
+    font-weight: 700;
+}
+.nav-item.active svg {
+    transform: translateY(-1px);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.nav-item.active span {
+    font-weight: 700;
+}
+.nav-item:hover:not(.active) {
+    color: #d1d5db;
+    background: rgba(255, 255, 255, 0.05);
+}
+.nav-item:active {
+    transform: scale(0.92);
+    transition: transform 0.1s;
+}
+
+/* تصغير البطاقات الأفقية والشبكات على الهاتف */
+@media (max-width: 480px) {
+    .scroll-row .card {
+        min-width: 75px !important;
+    }
+    .scroll-row .card .card-title {
+        font-size: 0.55rem;
+    }
+    .scroll-row .card .card-sub,
+    .scroll-row .card .card-type-badge {
+        font-size: 0.5rem;
+    }
+    .scroll-row .card .card-rating-badge {
+        font-size: 0.5rem;
+        padding: 1px 4px;
+        top: 3px;
+        right: 3px;
+    }
+    .scroll-row .card .play-circle-sm {
+        width: 30px;
+        height: 30px;
+    }
+    .grid {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 6px;
+    }
+    .grid .card .card-title {
+        font-size: 0.6rem;
+    }
+    .grid .card .card-sub,
+    .grid .card .card-type-badge {
+        font-size: 0.55rem;
+    }
+    .grid .card .card-rating-badge {
+        font-size: 0.55rem;
+        padding: 1px 5px;
+        top: 4px;
+        right: 4px;
+    }
+    .grid .card .play-circle-sm {
+        width: 32px;
+        height: 32px;
+    }
+    .card-info {
+        padding: 5px 7px;
+    }
+}
+
+        #app-content { padding-top:var(--header-height); min-height:100vh; }
+        .view-panel { display:none; animation:fadeSlideIn .4s; }
+        .view-panel.active { display:block; }
+        @keyframes fadeSlideIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+
+        .search-bar { padding:16px; background:var(--surface); margin:8px; border-radius:16px; display:flex; align-items:center; gap:10px; }
+        .search-bar input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:24px; padding:12px 16px; color:var(--text); font-family:'Cairo'; outline:none; }
+        .search-bar input:focus { border-color:var(--accent); }
+
+        #hero-slider { position:relative; width:100%; height:clamp(300px,45vw,500px); overflow:hidden; display:none; }
+        .home-view #hero-slider { display:block; }
+        .slider-track { position:relative; width:100%; height:100%; }
+        .slide { position:absolute; inset:0; opacity:0; transition:.7s; pointer-events:none; }
+        .slide.active { opacity:1; pointer-events:auto; }
+        .slide-bg { position:absolute; inset:0; background-size:cover; background-position:center; transition:8s ease-out; }
+        .slide.active .slide-bg { transform:scale(1.03); }
+        .slide-overlay { position:absolute; inset:0; background:linear-gradient(to top, var(--bg-deep) 0%, rgba(5,7,13,.9) 20%, transparent); }
+        .slide-content { position:absolute; bottom:clamp(16px,4vw,40px); right:clamp(10px,3vw,30px); left:clamp(10px,3vw,30px); z-index:3; max-width:580px; transform:translateY(20px); opacity:0; transition:.6s .1s; }
+        .slide.active .slide-content { transform:translateY(0); opacity:1; }
+        .slide-badge { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; font-size:.65rem; padding:4px 12px; border-radius:20px; margin-bottom:8px; }
+        .slide-title { font-size:clamp(1.2rem,3vw,2.2rem); font-weight:900; color:#fff; }
+        .slide-meta { display:flex; gap:10px; font-size:.75rem; color:#bcc3d0; margin-bottom:6px; }
+        .slide-overview { font-size:.78rem; color:#9da5b4; -webkit-line-clamp:2; overflow:hidden; margin-bottom:12px; }
+        .btn-slide { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:22px; font-size:.8rem; font-weight:700; cursor:pointer; }
+        .btn-slide.play { background:var(--accent); color:#fff; border:none; }
+        .btn-slide.info { background:rgba(255,255,255,.07); color:#dde1ea; border:1px solid rgba(255,255,255,.15); }
+        .slider-dots { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; }
+        .slider-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.25); border:none; cursor:pointer; }
+        .slider-dot.active { background:#fff; width:18px; border-radius:8px; }
+
+        .content-area { padding:0 clamp(8px,2.5vw,4%) 16px; }
+        .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .section-title { font-size:.9rem; font-weight:700; color:var(--text-bright); display:flex; align-items:center; gap:8px; }
+        .icon-bar { width:3px; height:18px; background:var(--accent); border-radius:3px; }
+        .scroll-row { display:flex; gap:clamp(8px,1.4vw,12px); overflow-x:auto; padding-bottom:6px; }
+        .scroll-row .card { min-width:110px; flex-shrink:0; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:8px; }
+        .card { background:var(--card); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.3s; }
+        .card:hover { transform:translateY(-4px); border-color:var(--border-light); }
+        .card-img-wrap { position:relative; width:100%; aspect-ratio:2/3; overflow:hidden; background:var(--surface); }
+        .card-img-wrap img { width:100%; height:100%; object-fit:cover; }
+        .card-rating-badge { position:absolute; top:5px; right:5px; background:rgba(0,0,0,.7); color:var(--gold); font-size:.65rem; padding:2px 7px; border-radius:8px; }
+        .card-play-hover { position:absolute; inset:0; background:rgba(5,7,13,.65); display:flex; align-items:center; justify-content:center; opacity:0; transition:.3s; }
+        .card:hover .card-play-hover { opacity:1; }
+        .play-circle-sm { width:38px; height:38px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 24px rgba(230,57,70,.5); }
+        .card-info { padding:8px 10px; }
+        .card-title { font-size:.72rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .card-sub { font-size:.62rem; color:var(--text-muted); }
+        .remove-watch-btn { position:absolute; top:5px; left:5px; background:rgba(0,0,0,.7); color:#fff; border:none; width:24px; height:24px; border-radius:50%; cursor:pointer; z-index:5; }
+
+        .filter-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
+        .filter-chip, .filter-select { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:5px 12px; font-size:.7rem; cursor:pointer; }
+        .filter-chip.active { background:var(--accent); color:#fff; }
+        .btn-load-more { display:block; width:100%; max-width:200px; margin:16px auto; padding:10px; background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:24px; cursor:pointer; }
+
+        #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.3s; }
+        #modal-overlay.open { opacity:1; pointer-events:auto; }
+        #modal-box { background:var(--surface); border-radius:18px; width:90%; max-width:900px; max-height:92vh; overflow-y:auto; }
+        #modal-player-wrap { width:100%; aspect-ratio:16/9; background:#000; }
+        #modal-details { padding:16px; }
+        .modal-top { display:flex; justify-content:space-between; align-items:flex-start; }
+        #modal-movie-title { font-size:1.1rem; font-weight:900; }
+        .modal-close-btn { background:var(--card); border:1px solid var(--border); color:var(--text); width:34px; height:34px; border-radius:50%; cursor:pointer; }
+        .modal-tags { display:flex; gap:6px; margin:10px 0; }
+        .tag { background:var(--card); border:1px solid var(--border); padding:3px 10px; font-size:.68rem; border-radius:6px; }
+        .tag.gold { color:var(--gold); border-color:rgba(240,192,64,.25); }
+        #modal-overview-text { color:#b0b8c8; font-size:.8rem; }
+        .empty-state { text-align:center; padding:40px; color:var(--text-dim); }
+        .skel { background:linear-gradient(100deg, var(--card) 25%, var(--surface2) 50%, var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; }
+        .skel-poster { width:100%; aspect-ratio:2/3; border-radius:14px; }
+        @keyframes shimmer { to { background-position:-200% 0; } }
+        #toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:var(--card); padding:10px 20px; border-radius:24px; z-index:300; opacity:0; transition:.3s; }
+        #toast.show { opacity:1; }
+
+    </style>
+</head>
+<body>
+<header id="app-header"><div class="header-logo">🎬 CineStream</div><button class="header-btn" id="global-search-btn">🔍</button></header>
+
+<div id="app-content" class="home-view">
+    <!-- HOME -->
+    <div class="view-panel active" id="view-home">
+        <section id="hero-slider"><div class="slider-track" id="slider-track"></div><div class="slider-dots" id="slider-dots"></div></section>
+        <div class="content-area">
+            <div class="section-block" id="continue-watching-section" style="display:none;">
+                <div class="section-head"><div class="section-title"><span class="icon-bar"></span>▶ متابعة المشاهدة</div></div>
+                <div class="scroll-row" id="continue-watching-row"></div>
+            </div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>🔥 رائج الآن</div></div><div class="scroll-row" id="trending-row"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام شائعة</div></div><div class="grid" id="grid-home-movies"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات شائعة</div></div><div class="grid" id="grid-home-tv"></div></div>
+            <div class="section-block"><div class="section-head"><div class="section-title"><span class="icon-bar"></span>⭐ الأعلى تقييماً</div></div><div class="scroll-row" id="top-rated-row"></div></div>
+        </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="view-panel" id="view-search">
+        <div class="content-area">
+            <div class="search-bar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="search-input" placeholder="ابحث عن فيلم أو مسلسل..." autocomplete="off">
+            </div>
+            <div class="grid" id="search-results-grid"><div class="empty-state">🔍 اكتب اسم العمل للبحث</div></div>
+        </div>
+    </div>
+
+    <!-- MOVIES -->
+    <div class="view-panel" id="view-movies">
+        <div class="content-area">
+            <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام</div></div>
+            <div class="filter-row" id="movie-quick-tabs">
+                <button class="filter-chip active" data-tab="popular">الشائعة</button>
+                <button class="filter-chip" data-tab="now_playing">قيد العرض</button>
+                <button class="filter-chip" data-tab="top_rated">الأعلى تقييماً</button>
+            </div>
+            <div class="filter-row">
+                <select class="filter-select" id="movie-year-select"><option value="">📅 السنة</option></select>
+                <select class="filter-select" id="movie-genre-select"><option value="">🎭 النوع</option></select>
+                <select class="filter-select" id="movie-company-select"><option value="">🏢 شركة الإنتاج</option></select>
+            </div>
+            <div class="grid" id="grid-movies"></div>
+            <button class="btn-load-more" id="btn-more-movies" style="display:none;">تحميل المزيد</button>
+        </div>
+    </div>
+
+    <!-- SERIES -->
+    <div class="view-panel" id="view-series">
+        <div class="content-area">
+            <div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات</div></div>
+            <div class="filter-row" id="series-quick-tabs">
+                <button class="filter-chip active" data-tab="popular">الشائعة</button>
+                <button class="filter-chip" data-tab="on_the_air">تعرض حالياً</button>
+                <button class="filter-chip" data-tab="top_rated">الأعلى تقييماً</button>
+            </div>
+            <div class="filter-row">
+                <select class="filter-select" id="series-year-select"><option value="">📅 السنة</option></select>
+                <select class="filter-select" id="series-genre-select"><option value="">🎭 النوع</option></select>
+                <select class="filter-select" id="series-company-select"><option value="">🏢 شبكة الإنتاج</option></select>
+            </div>
+            <div class="grid" id="grid-series"></div>
+            <button class="btn-load-more" id="btn-more-series" style="display:none;">تحميل المزيد</button>
+        </div>
+    </div>
+
+    <!-- SAVED -->
+    <div class="view-panel" id="view-saved">
+        <div class="content-area">
+            <div class="section-head"><div class="section-title"><span class="icon-bar"></span>❤️ المحفوظات</div></div>
+            <div class="grid" id="saved-grid"></div>
+            <div class="empty-state" id="saved-empty" style="display:none;">💾 لم تحفظ أي شيء بعد</div>
+        </div>
+    </div>
+
+    <!-- MORE -->
+    <div class="view-panel" id="view-more"><div class="content-area" style="text-align:center;padding:40px;"><div style="font-size:3rem;">🎬</div><h2>CineStream</h2></div></div>
+</div>
+
+<nav id="bottom-nav">
+    <button class="nav-item active" data-view="home">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L4 9v12h5v-7h6v7h5V9z"/></svg>
+        <span>الرئيسية</span>
+    </button>
+    <button class="nav-item" data-view="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>بحث</span>
+    </button>
+    <button class="nav-item" data-view="movies">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+        <span>أفلام</span>
+    </button>
+    <button class="nav-item" data-view="series">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg>
+        <span>مسلسلات</span>
+    </button>
+    <button class="nav-item" data-view="saved">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+        <span>محفوظات</span>
+    </button>
+</nav>
+
+<div id="modal-overlay" onclick="if(event.target===this)closeModal()"><div id="modal-box"><div id="modal-player-wrap"></div><div id="modal-details"><div class="modal-top"><div id="modal-movie-title">...</div><button class="modal-close-btn" onclick="closeModal()">✕</button></div><div class="modal-tags" id="modal-tags"></div><div id="modal-overview-text"></div></div></div></div>
+<div id="toast"></div>
+
+<script>
+    // ⚠️ استبدل هذا المفتاح بمفتاحك الخاص من TMDB إذا توقف عن العمل
+    const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8';
+    const TMDB = 'https://api.themoviedb.org/3';
+    const IMG = 'https://image.tmdb.org/t/p';
+    const STREAM_BASE = 'https://streamimdb.ru/embed';
+    const getStreamUrl = (imdbId, type) => type === 'tv' ? `${STREAM_BASE}/tv/${imdbId}` : `${STREAM_BASE}/movie/${imdbId}`;
+
+    const popularCompanies = [
+        {id:2, name:'Disney'}, {id:3, name:'Pixar'}, {id:4, name:'Paramount'}, {id:5, name:'Columbia'},
+        {id:7, name:'DreamWorks'}, {id:8, name:'Lionsgate'}, {id:12, name:'New Line Cinema'},
+        {id:25, name:'20th Century Fox'}, {id:33, name:'Universal Pictures'}, {id:34, name:'Sony Pictures'},
+        {id:40, name:'MGM'}, {id:41, name:'Orion'}, {id:43, name:'Fox Searchlight'}, {id:44, name:'Summit'},
+        {id:420, name:'Marvel Studios'}, {id:7505, name:'Marvel Entertainment'}, {id:431, name:'DC Films'},
+        {id:174, name:'Warner Bros.'}
+    ];
+
+    let sliderMovies=[], sliderIndex=0, sliderTimer=null;
+    let allGenres=[];
+    let savedItems=JSON.parse(localStorage.getItem('cs_saved')||'[]');
+    let continueWatching=JSON.parse(localStorage.getItem('cs_continue')||'[]');
+    let currentView='home';
+    let movieTab='popular', seriesTab='popular';
+    let movieYear='', movieGenre='', movieCompany='', moviePage=1;
+    let seriesYear='', seriesGenre='', seriesCompany='', seriesPage=1;
+    let searchTimeout;
+
+    function showToast(m,d=2000){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),d); }
+
+    async function tmdb(path,params={}){ const q=new URLSearchParams({api_key:TMDB_KEY,language:'ar',...params}); const r=await fetch(`${TMDB}${path}?${q}`); if(!r.ok)throw new Error(`TMDB ${r.status}`); return r.json(); }
+    async function getImdbId(id,type){ try{ const d=await tmdb(`/${type}/${id}/external_ids`); return d.imdb_id; }catch{return null;} }
+
+    function toggleSaved(item){ const idx=savedItems.findIndex(s=>s.id===item.id&&s.type===item.type); if(idx>-1){ savedItems.splice(idx,1); showToast('🗑️ أُزيل من المحفوظات'); } else { savedItems.push(item); showToast('❤️ أُضيف إلى المحفوظات'); } localStorage.setItem('cs_saved',JSON.stringify(savedItems)); if(currentView==='saved') renderSavedView(); }
+
+    function addToContinueWatching(item){
+        const idx = continueWatching.findIndex(c=>c.id===item.id&&c.type===item.type);
+        if(idx>-1) continueWatching.splice(idx,1);
+        continueWatching.unshift({...item, timestamp: Date.now()});
+        if(continueWatching.length > 20) continueWatching.pop();
+        localStorage.setItem('cs_continue', JSON.stringify(continueWatching));
+        renderContinueWatching();
+    }
+    function removeFromContinueWatching(id,type){
+        continueWatching = continueWatching.filter(c=>!(c.id===id&&c.type===type));
+        localStorage.setItem('cs_continue', JSON.stringify(continueWatching));
+        renderContinueWatching();
+    }
+    function renderContinueWatching(){
+        const row = document.getElementById('continue-watching-row');
+        const section = document.getElementById('continue-watching-section');
+        if(!continueWatching.length){ section.style.display='none'; return; }
+        section.style.display='block'; row.innerHTML='';
+        continueWatching.forEach(item=>{
+            const card = document.createElement('div'); card.className='card'; card.style.position='relative';
+            const poster=item.poster||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e' width='200' height='300'/%3E%3Ctext fill='%237b8296' font-size='36' x='100' y='160' text-anchor='middle'%3E🎬%3C/text%3E%3C/svg%3E`;
+            card.innerHTML=`<div class="card-img-wrap"><img src="${poster}" alt="${item.title}"><div class="card-play-hover"><div class="play-circle-sm">▶</div></div></div><div class="card-info"><div class="card-title">${item.title}</div></div><button class="remove-watch-btn">✕</button>`;
+            card.querySelector('.remove-watch-btn').addEventListener('click',(e)=>{e.stopPropagation(); removeFromContinueWatching(item.id,item.type);});
+            card.addEventListener('click',()=>openModal(item.id,item.type));
+            row.appendChild(card);
+        });
+    }
+
+    function createCard(m,type){
+        const card=document.createElement('div'); card.className='card'; card.tabIndex=0;
+        const poster=m.poster_path?`${IMG}/w342${m.poster_path}`:`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e' width='200' height='300'/%3E%3Ctext fill='%237b8296' font-size='36' x='100' y='160' text-anchor='middle'%3E🎬%3C/text%3E%3C/svg%3E`;
+        const title=m.title||m.name||'—';
+        const year=(m.release_date||m.first_air_date||'').slice(0,4)||'—';
+        const rating=m.vote_average?m.vote_average.toFixed(1):'—';
+        const resolvedType=type==='all'?(m.media_type||'movie'):type;
+        card.innerHTML=`<div class="card-img-wrap"><img src="${poster}" alt="${title}" loading="lazy"><div class="card-rating-badge">⭐ ${rating}</div><div class="card-play-hover"><div class="play-circle-sm">▶</div></div></div><div class="card-info"><div class="card-title" title="${title}">${title}</div><div class="card-sub"><span>${year}</span><span class="card-type-badge">${resolvedType==='tv'?'📺 مسلسل':'🎬 فيلم'}</span></div></div>`;
+        card.addEventListener('click',()=>openModal(m.id,resolvedType));
+        card.addEventListener('contextmenu',e=>{e.preventDefault();toggleSaved({id:m.id,type:resolvedType,title,year,rating,poster:m.poster_path?`${IMG}/w342${m.poster_path}`:''});});
+        return card;
+    }
+
+    async function initSlider(){
+        try{
+            const d=await tmdb('/trending/all/week');
+            sliderMovies=d.results.filter(m=>m.backdrop_path&&(m.title||m.name)&&m.overview).slice(0,7);
+            if(!sliderMovies.length){ const d2=await tmdb('/movie/popular'); sliderMovies=d2.results.filter(m=>m.backdrop_path&&m.overview).slice(0,7); }
+            renderSlider(); startAutoSlide();
+        }catch(e){ document.getElementById('hero-slider').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;">🎬 جار التحميل...</div>'; }
+    }
+    function renderSlider(){
+        const track=document.getElementById('slider-track'), dots=document.getElementById('slider-dots');
+        track.innerHTML=''; dots.innerHTML='';
+        sliderMovies.forEach((m,i)=>{
+            const slide=document.createElement('div'); slide.className='slide'+(i===0?' active':'');
+            slide.innerHTML=`<div class="slide-bg" style="background-image:url('${IMG}/w1280${m.backdrop_path}');"></div><div class="slide-overlay"></div><div class="slide-content"><span class="slide-badge">⭐ عرض مميز</span><div class="slide-title">${m.title||m.name}</div><div class="slide-meta"><span>⭐ ${(m.vote_average||0).toFixed(1)}</span><span>${(m.release_date||m.first_air_date||'').slice(0,4)}</span></div><div class="slide-overview">${m.overview||''}</div><div class="slide-btns"><button class="btn-slide play" data-id="${m.id}" data-type="${m.media_type||'movie'}">▶ شاهد الآن</button><button class="btn-slide info" data-id="${m.id}" data-type="${m.media_type||'movie'}">ℹ تفاصيل</button></div></div>`;
+            track.appendChild(slide);
+            const dot=document.createElement('button'); dot.className='slider-dot'+(i===0?' active':''); dot.addEventListener('click',()=>goToSlide(i)); dots.appendChild(dot);
+        });
+        track.querySelectorAll('.btn-slide.play').forEach(b=>b.addEventListener('click',(e)=>{e.stopPropagation(); playFromSlider(b.dataset.id,b.dataset.type);}));
+        track.querySelectorAll('.btn-slide.info').forEach(b=>b.addEventListener('click',(e)=>{e.stopPropagation(); openModal(parseInt(b.dataset.id),b.dataset.type);}));
+    }
+    function goToSlide(i){ if(i===sliderIndex)return; document.querySelectorAll('#slider-track .slide')[sliderIndex]?.classList.remove('active'); document.querySelectorAll('#slider-dots .slider-dot')[sliderIndex]?.classList.remove('active'); sliderIndex=i; document.querySelectorAll('#slider-track .slide')[sliderIndex]?.classList.add('active'); document.querySelectorAll('#slider-dots .slider-dot')[sliderIndex]?.classList.add('active'); resetSliderTimer(); }
+    function startAutoSlide(){ sliderTimer=setInterval(()=>goToSlide((sliderIndex+1)%sliderMovies.length),5000); }
+    function resetSliderTimer(){ clearInterval(sliderTimer); startAutoSlide(); }
+    async function playFromSlider(id,type){ showToast('⏳ جار التحميل...'); const imdb=await getImdbId(id,type); if(imdb){ openPlayerModal(imdb,type,{id,title:'',poster_path:'',backdrop_path:'',overview:'',vote_average:0}); } else {showToast('😕 لا رابط'); openModal(id,type);} }
+
+    function switchView(view){
+        if(currentView===view)return;
+        document.querySelectorAll('.view-panel').forEach(v=>v.classList.remove('active'));
+        document.getElementById('view-'+view).classList.add('active');
+        document.querySelectorAll('#bottom-nav .nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+        document.getElementById('app-content').className = view==='home'?'home-view':'';
+        currentView=view; window.scrollTo({top:0,behavior:'smooth'});
+        if(view==='movies') initMoviesView();
+        if(view==='series') initSeriesView();
+        if(view==='saved') renderSavedView();
+    }
+    document.getElementById('bottom-nav').addEventListener('click',e=>{ const item=e.target.closest('.nav-item'); if(item) switchView(item.dataset.view); });
+    document.getElementById('global-search-btn').addEventListener('click',()=>{ switchView('search'); document.getElementById('search-input').focus(); });
+
+    function populateSelect(id,options){ const sel=document.getElementById(id); sel.innerHTML=''; options.forEach(o=>{ const opt=document.createElement('option'); opt.value=o.id; opt.textContent=o.name; sel.appendChild(opt); }); }
+    function generateYearOptions(){ const opts=[{id:'',name:'كل السنوات'}]; for(let y=2025;y>=2010;y--) opts.push({id:y,name:y}); opts.push({id:'2000-2009',name:'2000-2009'}); return opts; }
+
+    async function loadGenres(){ try{ const d=await tmdb('/genre/movie/list'); allGenres=d.genres; }catch{} }
+
+    async function initMoviesView(){
+        if(!allGenres.length) await loadGenres();
+        populateSelect('movie-year-select', generateYearOptions());
+        populateSelect('movie-genre-select', [{id:'',name:'الكل'}].concat(allGenres));
+        populateSelect('movie-company-select', [{id:'',name:'الكل'}].concat(popularCompanies));
+        document.getElementById('movie-year-select').value=movieYear;
+        document.getElementById('movie-genre-select').value=movieGenre;
+        document.getElementById('movie-company-select').value=movieCompany;
+        moviePage=1; loadMoviesGrid(true);
+    }
+    async function loadMoviesGrid(reset=false){
+        const grid=document.getElementById('grid-movies');
+        if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
+        let endpoint='/movie/'+movieTab, params={page:moviePage};
+        const hasFilters = movieYear||movieGenre||movieCompany;
+        if(hasFilters){
+            endpoint='/discover/movie'; params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc';
+            if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; }
+            if(movieGenre) params.with_genres=movieGenre;
+            if(movieCompany) params.with_companies=movieCompany;
+        } else {
+            if(movieYear) params.primary_release_year=movieYear;
+            if(movieGenre) params.with_genres=movieGenre;
+            if(movieCompany) params.with_companies=movieCompany;
+        }
+        try{
+            const d=await tmdb(endpoint,params);
+            if(reset) grid.innerHTML='';
+            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'movie')));
+            document.getElementById('btn-more-movies').style.display = d.page < d.total_pages ? 'block' : 'none';
+            if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>';
+        }catch{ grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+    }
+    document.getElementById('movie-quick-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active'); movieTab=chip.dataset.tab; moviePage=1; loadMoviesGrid(true);
+    });
+    document.getElementById('movie-year-select').addEventListener('change',function(){ movieYear=this.value; moviePage=1; loadMoviesGrid(true); });
+    document.getElementById('movie-genre-select').addEventListener('change',function(){ movieGenre=this.value; moviePage=1; loadMoviesGrid(true); });
+    document.getElementById('movie-company-select').addEventListener('change',function(){ movieCompany=this.value; moviePage=1; loadMoviesGrid(true); });
+    document.getElementById('btn-more-movies').addEventListener('click',()=>{ moviePage++; loadMoviesGrid(false); });
+
+    async function initSeriesView(){
+        if(!allGenres.length) await loadGenres();
+        populateSelect('series-year-select', generateYearOptions());
+        populateSelect('series-genre-select', [{id:'',name:'الكل'}].concat(allGenres));
+        populateSelect('series-company-select', [{id:'',name:'الكل'}].concat(popularCompanies.map(c=>({...c,name:c.name+' (شبكة)'}))));
+        document.getElementById('series-year-select').value=seriesYear;
+        document.getElementById('series-genre-select').value=seriesGenre;
+        document.getElementById('series-company-select').value=seriesCompany;
+        seriesPage=1; loadSeriesGrid(true);
+    }
+    async function loadSeriesGrid(reset=false){
+        const grid=document.getElementById('grid-series');
+        if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
+        let endpoint='/tv/'+seriesTab, params={page:seriesPage};
+        const hasFilters = seriesYear||seriesGenre||seriesCompany;
+        if(hasFilters){
+            endpoint='/discover/tv'; params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc';
+            if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; }
+            if(seriesGenre) params.with_genres=seriesGenre;
+            if(seriesCompany) params.with_companies=seriesCompany;
+        } else {
+            if(seriesYear) params.first_air_date_year=seriesYear;
+            if(seriesGenre) params.with_genres=seriesGenre;
+            if(seriesCompany) params.with_companies=seriesCompany;
+        }
+        try{
+            const d=await tmdb(endpoint,params);
+            if(reset) grid.innerHTML='';
+            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv')));
+            document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none';
+        }catch{ grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+    }
+    document.getElementById('series-quick-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active'); seriesTab=chip.dataset.tab; seriesPage=1; loadSeriesGrid(true);
+    });
+    document.getElementById('series-year-select').addEventListener('change',function(){ seriesYear=this.value; seriesPage=1; loadSeriesGrid(true); });
+    document.getElementById('series-genre-select').addEventListener('change',function(){ seriesGenre=this.value; seriesPage=1; loadSeriesGrid(true); });
+    document.getElementById('series-company-select').addEventListener('change',function(){ seriesCompany=this.value; seriesPage=1; loadSeriesGrid(true); });
+    document.getElementById('btn-more-series').addEventListener('click',()=>{ seriesPage++; loadSeriesGrid(false); });
+
+    function renderSavedView(){
+        const grid=document.getElementById('saved-grid');
+        const empty = document.getElementById('saved-empty');
+        if(!savedItems.length){
+            grid.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        grid.innerHTML='';
+        savedItems.slice().reverse().forEach(item=>{
+            const card = document.createElement('div'); card.className='card';
+            const poster=item.poster||`data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23151d2e'/%3E%3C/svg%3E`;
+            card.innerHTML=`<div class="card-img-wrap"><img src="${poster}" alt="${item.title}"><div class="card-rating-badge">⭐ ${item.rating}</div></div><div class="card-info"><div class="card-title">${item.title}</div><div class="card-sub"><span>${item.year}</span></div></div>`;
+            card.addEventListener('click',()=>openModal(item.id,item.type));
+            card.addEventListener('contextmenu',e=>{e.preventDefault(); toggleSaved(item);});
+            grid.appendChild(card);
+        });
+    }
+
+    async function performSearch(query){
+        const grid = document.getElementById('search-results-grid');
+        grid.innerHTML = '<div class="loading-msg">🔍 جارٍ البحث...</div>';
+        try {
+            const d = await tmdb('/search/multi', { query });
+            grid.innerHTML = '';
+            const results = d.results.filter(m => m.media_type !== 'person' && m.poster_path);
+            if(!results.length) grid.innerHTML = '<div class="empty-state">😕 لا توجد نتائج</div>';
+            else results.forEach(m => grid.appendChild(createCard(m, m.media_type || 'movie')));
+        } catch { grid.innerHTML = '<div class="loading-msg">⚠️ خطأ في البحث</div>'; }
+    }
+    document.getElementById('search-input').addEventListener('input', function(e){
+        clearTimeout(searchTimeout);
+        const val = e.target.value.trim();
+        if(!val) {
+            document.getElementById('search-results-grid').innerHTML = '<div class="empty-state">🔍 اكتب اسم العمل للبحث</div>';
+            return;
+        }
+        searchTimeout = setTimeout(() => performSearch(val), 400);
+    });
+
+    async function openModal(id,type){
+        const overlay=document.getElementById('modal-overlay'); overlay.classList.add('open'); document.body.style.overflow='hidden';
+        document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⏳</div>';
+        document.getElementById('modal-movie-title').textContent='...'; document.getElementById('modal-overview-text').textContent=''; document.getElementById('modal-tags').innerHTML='';
+        try{
+            const detail=await tmdb(`/${type}/${id}`,{append_to_response:'external_ids'});
+            const imdbId=detail.external_ids?.imdb_id||detail.imdb_id;
+            const title=detail.title||detail.name||'—', year=(detail.release_date||detail.first_air_date||'').slice(0,4), rating=detail.vote_average?.toFixed(1);
+            document.getElementById('modal-movie-title').textContent=title;
+            document.getElementById('modal-overview-text').textContent=detail.overview||'لا يوجد وصف.';
+            const tags=document.getElementById('modal-tags');
+            const addTag=(t,c='')=>{ if(t){ const s=document.createElement('span'); s.className=`tag ${c}`; s.textContent=t; tags.appendChild(s); }};
+            addTag(`⭐ ${rating}`,'gold'); addTag(year); addTag(type==='tv'?'📺 مسلسل':'🎬 فيلم');
+            if(imdbId){
+                openPlayerModal(imdbId,type,detail);
+                addToContinueWatching({id,type,title,poster:detail.poster_path?`${IMG}/w342${detail.poster_path}`:''});
+            } else document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">😕 لا رابط</div>';
+        }catch{ document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ خطأ</div>'; }
+    }
+    function openPlayerModal(imdbId,type,detail){
+        const url=getStreamUrl(imdbId,type), sandbox='allow-scripts allow-same-origin';
+        document.getElementById('modal-player-wrap').innerHTML=`<div style="position:relative;"><div style="width:100%;aspect-ratio:16/9;background:#000;"><iframe src="${url}" sandbox="${sandbox}" allowfullscreen style="width:100%;height:100%;border:none;"></iframe></div></div>`;
+    }
+    function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow=''; document.getElementById('modal-player-wrap').innerHTML=''; }
+    document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(document.getElementById('modal-overlay').classList.contains('open')) closeModal(); } });
+
+    async function loadTrending(){ const row=document.getElementById('trending-row'); row.innerHTML='<div class="skel skel-poster" style="min-width:110px;"></div>'.repeat(5); try{ const d=await tmdb('/trending/all/day'); row.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,15).forEach(m=>row.appendChild(createCard(m,m.media_type||'movie'))); }catch{row.innerHTML='<div class="loading-msg">⚠️ خطأ</div>';} }
+    async function loadHomeMovies(){ const grid=document.getElementById('grid-home-movies'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/movie/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'movie'))); }catch{} }
+    async function loadHomeTV(){ const grid=document.getElementById('grid-home-tv'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/tv/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'tv'))); }catch{} }
+    async function loadTopRated(){ const row=document.getElementById('top-rated-row'); row.innerHTML='<div class="skel skel-poster" style="min-width:110px;"></div>'.repeat(5); try{ const d=await tmdb('/movie/top_rated'); row.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>row.appendChild(createCard(m,'movie'))); }catch{} }
+
+    async function init(){
+        await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
+        renderContinueWatching();
+        console.log('🎬 CineStream جاهز');
+    }
+    init();
+</script>
+</body>
+</html>
