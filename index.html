@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+0<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -145,7 +145,7 @@
     </style>
 </head>
 <body>
-<header id="app-header"><div class="header-logo">🎬 CineStream V1</div><button class="header-btn" id="global-search-btn">🔍</button></header>
+<header id="app-header"><div class="header-logo">🎬 CineStream</div><button class="header-btn" id="global-search-btn">🔍</button></header>
 
 <div id="app-content" class="home-view">
     <!-- HOME -->
@@ -269,11 +269,8 @@
         {id:174, name:'Warner Bros.'}, {id:213, name:'Netflix'}
     ];
 
-    // أرقام Netflix المتعددة - الفصل بعلامة | (pipe)
-    const netflixIds = {
-        movie: '213|2680|127782|117321|125281',
-        tv: '213|2680|127782'
-    };
+    // رقم مزود خدمة Netflix في TMDB
+    const NETFLIX_WATCH_PROVIDER = '8';
 
     let sliderMovies=[], sliderIndex=0, sliderTimer=null;
     let allGenres=[];
@@ -417,9 +414,15 @@
             else params.primary_release_year=movieYear;
         }
         if(movieGenre) params.with_genres=movieGenre;
+
+        // معالجة اختيار Netflix عبر مزود الخدمة
         if(movieCompany) {
-            if(movieCompany == 213) params.with_companies = netflixIds.movie; // استخدم السلسلة مع |
-            else params.with_companies = movieCompany;
+            if(movieCompany == 213) {
+                params.with_watch_providers = NETFLIX_WATCH_PROVIDER;
+                params.watch_region = 'US'; // منطقة المشاهدة (يمكن تغييرها)
+            } else {
+                params.with_companies = movieCompany;
+            }
         }
 
         try{
@@ -485,9 +488,15 @@
             else params.first_air_date_year=seriesYear;
         }
         if(seriesGenre) params.with_genres=seriesGenre;
+
+        // معالجة اختيار Netflix عبر مزود الخدمة للمسلسلات
         if(seriesCompany) {
-            if(seriesCompany == 213) params.with_networks = netflixIds.tv; // استخدم السلسلة مع |
-            else params.with_companies = seriesCompany;
+            if(seriesCompany == 213) {
+                params.with_watch_providers = NETFLIX_WATCH_PROVIDER;
+                params.watch_region = 'US';
+            } else {
+                params.with_companies = seriesCompany;
+            }
         }
 
         try{
@@ -567,7 +576,7 @@
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
-        console.log('🎬 CineStream جاهز مع Netflix وفلاتر إقليمية منسدلة');
+        console.log('🎬 CineStream جاهز مع Netflix عبر مزود الخدمة');
     }
     init();
 </script>
