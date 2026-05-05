@@ -167,7 +167,7 @@
         </div>
     </div>
 
-    <!-- MOVIES (مع الأقسام الإقليمية) -->
+    <!-- MOVIES (مع الأقسام الإقليمية والدمج) -->
     <div class="view-panel" id="view-movies">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام</div></div>
@@ -193,7 +193,7 @@
         </div>
     </div>
 
-    <!-- SERIES (مع الأقسام الإقليمية) -->
+    <!-- SERIES (مع الأقسام الإقليمية والدمج) -->
     <div class="view-panel" id="view-series">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات</div></div>
@@ -270,13 +270,12 @@
     let continueWatching=JSON.parse(localStorage.getItem('cs_continue')||'[]');
     let currentView='home';
     let movieTab='popular', seriesTab='popular';
-    let movieRegion = ''; // '' يعني بدون فلتر إقليمي
+    let movieRegion = '';
     let seriesRegion = '';
     let movieYear='', movieGenre='', movieCompany='', moviePage=1;
     let seriesYear='', seriesGenre='', seriesCompany='', seriesPage=1;
     let searchTimeout;
 
-    // خريطة الأقاليم
     const movieRegionMap = {
         arabic: { origin_country: 'EG', original_language: 'ar' },
         korean: { origin_country: 'KR', original_language: 'ko' },
@@ -398,33 +397,40 @@
         document.querySelector(`#movie-quick-tabs .filter-chip[data-tab="${movieTab}"]`)?.classList.add('active');
         loadMoviesGrid(true);
     }
+
     async function loadMoviesGrid(reset=false){
         const grid=document.getElementById('grid-movies');
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
-        let endpoint, params={page:moviePage};
+        let endpoint='/discover/movie'; // دائماً نستخدم discover لدمج الفلاتر
+        let params={page:moviePage, sort_by:'popularity.desc'};
 
         // إذا كان هناك فلتر إقليمي
         if(movieRegion && movieRegionMap[movieRegion]){
-            endpoint='/discover/movie';
             const region = movieRegionMap[movieRegion];
-            params.sort_by='popularity.desc';
             params.with_origin_country = region.origin_country;
             params.with_original_language = region.original_language;
         } else {
-            endpoint='/movie/'+movieTab;
+            // بدون فلتر إقليمي نعتمد على التبويب الأساسي لترتيب الفرز
+            if(movieTab === 'top_rated') params.sort_by = 'vote_average.desc';
+            else if(movieTab === 'now_playing') {
+                // للأفلام التي تُعرض حالياً يمكن إضافة نوع الإصدار
+                params['with_release_type'] = '2|3';
+            }
         }
-        const hasFilters = movieYear||movieGenre||movieCompany;
-        if(hasFilters && !movieRegion){
-            endpoint='/discover/movie';
-            params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc';
-            if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; }
-            if(movieGenre) params.with_genres=movieGenre;
-            if(movieCompany) params.with_companies=movieCompany;
-        } else {
-            if(movieYear && !movieRegion) params.primary_release_year=movieYear;
-            if(movieGenre && !movieRegion) params.with_genres=movieGenre;
-            if(movieCompany && !movieRegion) params.with_companies=movieCompany;
+
+        // إضافة فلاتر السنة والنوع والشركة (تعمل مع الفلتر الإقليمي)
+        if(movieYear){
+            if(movieYear.includes('-')){
+                const [s,e]=movieYear.split('-');
+                params['primary_release_date.gte'] = `${s}-01-01`;
+                params['primary_release_date.lte'] = `${e}-12-31`;
+            } else {
+                params.primary_release_year = movieYear;
+            }
         }
+        if(movieGenre) params.with_genres = movieGenre;
+        if(movieCompany) params.with_companies = movieCompany;
+
         try{
             const d=await tmdb(endpoint,params);
             if(reset) grid.innerHTML='';
@@ -433,12 +439,14 @@
             if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>';
         }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
+
+    // مستمعو الأفلام
     document.getElementById('movie-quick-tabs').addEventListener('click',e=>{
         const chip=e.target.closest('.filter-chip'); if(!chip)return;
         document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
         chip.classList.add('active');
         movieTab=chip.dataset.tab;
-        movieRegion=''; // إلغاء الفلتر الإقليمي
+        movieRegion='';
         document.querySelectorAll('#movie-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
         moviePage=1; loadMoviesGrid(true);
     });
@@ -447,7 +455,6 @@
         document.querySelectorAll('#movie-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
         chip.classList.add('active');
         movieRegion=chip.dataset.region;
-        // إلغاء تفعيل التبويبات الرئيسية
         document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
         moviePage=1; loadMoviesGrid(true);
     });
@@ -469,39 +476,43 @@
         document.querySelector(`#series-quick-tabs .filter-chip[data-tab="${seriesTab}"]`)?.classList.add('active');
         loadSeriesGrid(true);
     }
+
     async function loadSeriesGrid(reset=false){
         const grid=document.getElementById('grid-series');
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
-        let endpoint, params={page:seriesPage};
+        let endpoint='/discover/tv';
+        let params={page:seriesPage, sort_by:'popularity.desc'};
 
         if(seriesRegion && seriesRegionMap[seriesRegion]){
-            endpoint='/discover/tv';
             const region = seriesRegionMap[seriesRegion];
-            params.sort_by='popularity.desc';
             params.with_origin_country = region.origin_country;
             params.with_original_language = region.original_language;
         } else {
-            endpoint='/tv/'+seriesTab;
+            if(seriesTab === 'top_rated') params.sort_by = 'vote_average.desc';
+            // 'on_the_air' تستخدم نفس discovery مع فرز شعبي
         }
-        const hasFilters = seriesYear||seriesGenre||seriesCompany;
-        if(hasFilters && !seriesRegion){
-            endpoint='/discover/tv';
-            params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc';
-            if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; }
-            if(seriesGenre) params.with_genres=seriesGenre;
-            if(seriesCompany) params.with_companies=seriesCompany;
-        } else {
-            if(seriesYear && !seriesRegion) params.first_air_date_year=seriesYear;
-            if(seriesGenre && !seriesRegion) params.with_genres=seriesGenre;
-            if(seriesCompany && !seriesCompany) params.with_companies=seriesCompany;
+
+        if(seriesYear){
+            if(seriesYear.includes('-')){
+                const [s,e]=seriesYear.split('-');
+                params['first_air_date.gte'] = `${s}-01-01`;
+                params['first_air_date.lte'] = `${e}-12-31`;
+            } else {
+                params.first_air_date_year = seriesYear;
+            }
         }
+        if(seriesGenre) params.with_genres = seriesGenre;
+        if(seriesCompany) params.with_companies = seriesCompany;
+
         try{
             const d=await tmdb(endpoint,params);
             if(reset) grid.innerHTML='';
             d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv')));
             document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none';
+            if(!grid.children.length && reset) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>';
         }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
+
     document.getElementById('series-quick-tabs').addEventListener('click',e=>{
         const chip=e.target.closest('.filter-chip'); if(!chip)return;
         document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
@@ -575,7 +586,7 @@
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
-        console.log('🎬 CineStream جاهز');
+        console.log('🎬 CineStream جاهز مع دمج الفلاتر الإقليمية');
     }
     init();
 </script>
