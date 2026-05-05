@@ -255,7 +255,22 @@
 
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()"><div id="modal-box"><div id="modal-player-wrap"></div><div id="modal-details"><div class="modal-top"><div id="modal-movie-title">...</div><button class="modal-close-btn" onclick="closeModal()">✕</button></div><div class="modal-tags" id="modal-tags"></div><div id="modal-overview-text"></div></div></div></div>
 <div id="toast"></div>
-
+<div class="section-block">
+    <div class="section-head">
+        <div class="section-title"><span class="icon-bar"></span>🌍 أقسام إقليمية</div>
+    </div>
+    <div class="filter-row" id="region-tabs">
+        <button class="filter-chip" data-region="arabic_movies">🎬 أفلام عربية</button>
+        <button class="filter-chip" data-region="korean_movies">🎬 أفلام كورية</button>
+        <button class="filter-chip" data-region="turkish_movies">🎬 أفلام تركية</button>
+        <button class="filter-chip" data-region="indian_movies">🎬 أفلام هندية</button>
+        <button class="filter-chip" data-region="arabic_tv">📺 مسلسلات عربية</button>
+        <button class="filter-chip" data-region="korean_tv">📺 مسلسلات كورية</button>
+        <button class="filter-chip" data-region="turkish_tv">📺 مسلسلات تركية</button>
+    </div>
+    <div class="grid" id="grid-region"></div>
+    <button class="btn-load-more" id="btn-more-region" style="display:none;">تحميل المزيد</button>
+</div>
 <script>
     const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // استبدل بمفتاحك
     const TMDB = 'https://api.themoviedb.org/3';
@@ -470,7 +485,69 @@
     async function loadHomeMovies(){ const grid=document.getElementById('grid-home-movies'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/movie/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'movie'))); }catch{} }
     async function loadHomeTV(){ const grid=document.getElementById('grid-home-tv'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/tv/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'tv'))); }catch{} }
     async function loadTopRated(){ const row=document.getElementById('top-rated-row'); row.innerHTML='<div class="skel skel-poster" style="min-width:110px;"></div>'.repeat(5); try{ const d=await tmdb('/movie/top_rated'); row.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>row.appendChild(createCard(m,'movie'))); }catch{} }
+// متغيرات الحالة الإقليمية
+let currentRegion = 'arabic_movies';
+let regionPage = 1;
 
+// خريطة الأقسام الإقليمية
+const regionMap = {
+    arabic_movies: { type: 'movie', origin_country: 'EG', original_language: 'ar', label: 'أفلام عربية' },
+    korean_movies: { type: 'movie', origin_country: 'KR', original_language: 'ko', label: 'أفلام كورية' },
+    turkish_movies: { type: 'movie', origin_country: 'TR', original_language: 'tr', label: 'أفلام تركية' },
+    indian_movies: { type: 'movie', origin_country: 'IN', original_language: 'hi', label: 'أفلام هندية' },
+    arabic_tv: { type: 'tv', origin_country: 'EG', original_language: 'ar', label: 'مسلسلات عربية' },
+    korean_tv: { type: 'tv', origin_country: 'KR', original_language: 'ko', label: 'مسلسلات كورية' },
+    turkish_tv: { type: 'tv', origin_country: 'TR', original_language: 'tr', label: 'مسلسلات تركية' }
+};
+
+// دالة تحميل محتوى إقليمي
+async function loadRegionGrid(reset = false) {
+    const grid = document.getElementById('grid-region');
+    const btnMore = document.getElementById('btn-more-region');
+    const region = regionMap[currentRegion];
+    
+    if (reset) {
+        grid.innerHTML = '<div class="skel skel-poster"></div>'.repeat(8);
+        regionPage = 1;
+    }
+    
+    const endpoint = region.type === 'movie' ? '/discover/movie' : '/discover/tv';
+    const params = {
+        page: regionPage,
+        with_origin_country: region.origin_country,
+        with_original_language: region.original_language,
+        sort_by: 'popularity.desc'
+    };
+    
+    try {
+        const d = await tmdb(endpoint, params);
+        if (reset) grid.innerHTML = '';
+        d.results.filter(m => m.poster_path).forEach(m => grid.appendChild(createCard(m, region.type)));
+        btnMore.style.display = d.page < d.total_pages ? 'block' : 'none';
+        if (!grid.children.length) grid.innerHTML = '<div class="loading-msg">😕 لا توجد نتائج</div>';
+    } catch {
+        if (reset) grid.innerHTML = '<div class="loading-msg">⚠️ خطأ</div>';
+    }
+}
+
+// مستمعو الأحداث
+document.getElementById('region-tabs').addEventListener('click', e => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    document.querySelectorAll('#region-tabs .filter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    currentRegion = chip.dataset.region;
+    loadRegionGrid(true);
+});
+
+document.getElementById('btn-more-region').addEventListener('click', () => {
+    regionPage++;
+    loadRegionGrid(false);
+});
+
+// تحميل القسم الافتراضي (أفلام عربية) عند بدء الصفحة الرئيسية
+// أضف هذا السطر داخل دالة init() بعد الأسطر الموجودة:
+// loadRegionGrid(true);
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
