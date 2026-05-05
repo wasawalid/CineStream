@@ -19,7 +19,7 @@
             --ease: cubic-bezier(.4,0,.2,1); --ease-spring: cubic-bezier(.34,1.56,.64,1);
             --ease-smooth: cubic-bezier(.22,.61,.36,1); --nav-height: 64px; --header-height: 52px;
             --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --card-size: 150px; /* حجم موحد لكل البطاقات على جميع الشاشات */
+            --card-size: 150px;
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         html { scroll-behavior:smooth; -webkit-tap-highlight-color:transparent; -webkit-font-smoothing:antialiased; }
@@ -90,28 +90,9 @@
         .section-title { font-size:.9rem; font-weight:700; color:var(--text-bright); display:flex; align-items:center; gap:8px; }
         .icon-bar { width:3px; height:18px; background:var(--accent); border-radius:3px; }
         .scroll-row { display:flex; gap:clamp(8px,1.4vw,12px); overflow-x:auto; padding-bottom:6px; scroll-snap-type:x proximity; }
-
-        /* بطاقات موحدة الحجم في كل مكان */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr));
-            gap: clamp(6px, 1.2vw, 10px);
-        }
-        .scroll-row .card {
-            min-width: var(--card-size) !important;
-            max-width: var(--card-size) !important;
-            flex-shrink: 0;
-            scroll-snap-align: start;
-        }
-        .card { 
-            background:var(--card); 
-            border-radius:var(--radius); 
-            overflow:hidden; 
-            cursor:pointer; 
-            transition:.3s; 
-            border:1px solid transparent; 
-            width: 100%;
-        }
+        .scroll-row .card { min-width: var(--card-size) !important; max-width: var(--card-size) !important; flex-shrink:0; scroll-snap-align:start; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-size), 1fr)); gap: clamp(6px, 1.2vw, 10px); }
+        .card { background:var(--card); border-radius:var(--radius); overflow:hidden; cursor:pointer; transition:.3s; border:1px solid transparent; width:100%; }
         .card:hover { transform:translateY(-4px); border-color:var(--border-light); }
         .card:active { transform:scale(.96); }
         .card-img-wrap { position:relative; width:100%; aspect-ratio:2/3; overflow:hidden; background:var(--surface); }
@@ -127,7 +108,7 @@
         .remove-watch-btn { position:absolute; top:5px; left:5px; background:rgba(0,0,0,.7); color:#fff; border:none; width:22px; height:22px; border-radius:50%; cursor:pointer; z-index:5; display:flex; align-items:center; justify-content:center; font-size:.7rem; }
 
         .filter-row { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px; }
-        .filter-chip, .filter-select { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:5px 12px; font-size:.7rem; cursor:pointer; transition:.2s; }
+        .filter-chip, .filter-select { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:20px; padding:5px 12px; font-size:.7rem; cursor:pointer; transition:.2s; white-space:nowrap; }
         .filter-chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
         .btn-load-more { display:block; width:100%; max-width:200px; margin:16px auto; padding:10px; background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:24px; cursor:pointer; font-family:'Cairo'; transition:.2s; }
         .btn-load-more:hover { background:var(--card); }
@@ -151,7 +132,6 @@
         #toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:var(--card); padding:10px 20px; border-radius:24px; z-index:300; opacity:0; transition:.3s; border:1px solid var(--border); font-size:.75rem; white-space:nowrap; }
         #toast.show { opacity:1; }
 
-        /* تصغير الشريط السفلي للهاتف */
         @media (max-width: 480px) {
             :root { --card-size: 110px; }
             #bottom-nav { padding: 6px 8px; border-radius: 35px; gap: 0; }
@@ -187,7 +167,7 @@
         </div>
     </div>
 
-    <!-- MOVIES -->
+    <!-- MOVIES (مع الأقسام الإقليمية) -->
     <div class="view-panel" id="view-movies">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام</div></div>
@@ -195,6 +175,13 @@
                 <button class="filter-chip active" data-tab="popular">الشائعة</button>
                 <button class="filter-chip" data-tab="now_playing">قيد العرض</button>
                 <button class="filter-chip" data-tab="top_rated">الأعلى تقييماً</button>
+            </div>
+            <div class="filter-row" id="movie-region-tabs">
+                <button class="filter-chip" data-region="arabic">🎬 عربية</button>
+                <button class="filter-chip" data-region="korean">🎬 كورية</button>
+                <button class="filter-chip" data-region="turkish">🎬 تركية</button>
+                <button class="filter-chip" data-region="indian">🎬 هندية</button>
+                <button class="filter-chip" data-region="japanese">🎬 يابانية</button>
             </div>
             <div class="filter-row">
                 <select class="filter-select" id="movie-year-select"><option value="">📅 السنة</option></select>
@@ -206,7 +193,7 @@
         </div>
     </div>
 
-    <!-- SERIES -->
+    <!-- SERIES (مع الأقسام الإقليمية) -->
     <div class="view-panel" id="view-series">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات</div></div>
@@ -214,6 +201,11 @@
                 <button class="filter-chip active" data-tab="popular">الشائعة</button>
                 <button class="filter-chip" data-tab="on_the_air">تعرض حالياً</button>
                 <button class="filter-chip" data-tab="top_rated">الأعلى تقييماً</button>
+            </div>
+            <div class="filter-row" id="series-region-tabs">
+                <button class="filter-chip" data-region="arabic">📺 عربية</button>
+                <button class="filter-chip" data-region="korean">📺 كورية</button>
+                <button class="filter-chip" data-region="turkish">📺 تركية</button>
             </div>
             <div class="filter-row">
                 <select class="filter-select" id="series-year-select"><option value="">📅 السنة</option></select>
@@ -225,7 +217,7 @@
         </div>
     </div>
 
-    <!-- CONTINUE WATCHING (شبكة مثل المحفوظات) -->
+    <!-- CONTINUE WATCHING -->
     <div class="view-panel" id="view-continue">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>▶ متابعة المشاهدة</div></div>
@@ -255,22 +247,7 @@
 
 <div id="modal-overlay" onclick="if(event.target===this)closeModal()"><div id="modal-box"><div id="modal-player-wrap"></div><div id="modal-details"><div class="modal-top"><div id="modal-movie-title">...</div><button class="modal-close-btn" onclick="closeModal()">✕</button></div><div class="modal-tags" id="modal-tags"></div><div id="modal-overview-text"></div></div></div></div>
 <div id="toast"></div>
-<div class="section-block">
-    <div class="section-head">
-        <div class="section-title"><span class="icon-bar"></span>🌍 أقسام إقليمية</div>
-    </div>
-    <div class="filter-row" id="region-tabs">
-        <button class="filter-chip" data-region="arabic_movies">🎬 أفلام عربية</button>
-        <button class="filter-chip" data-region="korean_movies">🎬 أفلام كورية</button>
-        <button class="filter-chip" data-region="turkish_movies">🎬 أفلام تركية</button>
-        <button class="filter-chip" data-region="indian_movies">🎬 أفلام هندية</button>
-        <button class="filter-chip" data-region="arabic_tv">📺 مسلسلات عربية</button>
-        <button class="filter-chip" data-region="korean_tv">📺 مسلسلات كورية</button>
-        <button class="filter-chip" data-region="turkish_tv">📺 مسلسلات تركية</button>
-    </div>
-    <div class="grid" id="grid-region"></div>
-    <button class="btn-load-more" id="btn-more-region" style="display:none;">تحميل المزيد</button>
-</div>
+
 <script>
     const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // استبدل بمفتاحك
     const TMDB = 'https://api.themoviedb.org/3';
@@ -293,9 +270,25 @@
     let continueWatching=JSON.parse(localStorage.getItem('cs_continue')||'[]');
     let currentView='home';
     let movieTab='popular', seriesTab='popular';
+    let movieRegion = ''; // '' يعني بدون فلتر إقليمي
+    let seriesRegion = '';
     let movieYear='', movieGenre='', movieCompany='', moviePage=1;
     let seriesYear='', seriesGenre='', seriesCompany='', seriesPage=1;
     let searchTimeout;
+
+    // خريطة الأقاليم
+    const movieRegionMap = {
+        arabic: { origin_country: 'EG', original_language: 'ar' },
+        korean: { origin_country: 'KR', original_language: 'ko' },
+        turkish: { origin_country: 'TR', original_language: 'tr' },
+        indian: { origin_country: 'IN', original_language: 'hi' },
+        japanese: { origin_country: 'JP', original_language: 'ja' }
+    };
+    const seriesRegionMap = {
+        arabic: { origin_country: 'EG', original_language: 'ar' },
+        korean: { origin_country: 'KR', original_language: 'ko' },
+        turkish: { origin_country: 'TR', original_language: 'tr' }
+    };
 
     function showToast(m,d=2000){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),d); }
     async function tmdb(path,params={}){ const q=new URLSearchParams({api_key:TMDB_KEY,language:'ar',...params}); const r=await fetch(`${TMDB}${path}?${q}`); if(!r.ok)throw new Error(`TMDB ${r.status}`); return r.json(); }
@@ -399,18 +392,65 @@
         document.getElementById('movie-year-select').value=movieYear;
         document.getElementById('movie-genre-select').value=movieGenre;
         document.getElementById('movie-company-select').value=movieCompany;
-        moviePage=1; loadMoviesGrid(true);
+        moviePage=1;
+        // تفعيل التبويب النشط
+        document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c => c.classList.remove('active'));
+        document.querySelector(`#movie-quick-tabs .filter-chip[data-tab="${movieTab}"]`)?.classList.add('active');
+        loadMoviesGrid(true);
     }
     async function loadMoviesGrid(reset=false){
         const grid=document.getElementById('grid-movies');
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
-        let endpoint='/movie/'+movieTab, params={page:moviePage};
+        let endpoint, params={page:moviePage};
+
+        // إذا كان هناك فلتر إقليمي
+        if(movieRegion && movieRegionMap[movieRegion]){
+            endpoint='/discover/movie';
+            const region = movieRegionMap[movieRegion];
+            params.sort_by='popularity.desc';
+            params.with_origin_country = region.origin_country;
+            params.with_original_language = region.original_language;
+        } else {
+            endpoint='/movie/'+movieTab;
+        }
         const hasFilters = movieYear||movieGenre||movieCompany;
-        if(hasFilters){ endpoint='/discover/movie'; params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc'; if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; } if(movieGenre) params.with_genres=movieGenre; if(movieCompany) params.with_companies=movieCompany; }
-        else { if(movieYear) params.primary_release_year=movieYear; if(movieGenre) params.with_genres=movieGenre; if(movieCompany) params.with_companies=movieCompany; }
-        try{ const d=await tmdb(endpoint,params); if(reset) grid.innerHTML=''; d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'movie'))); document.getElementById('btn-more-movies').style.display = d.page < d.total_pages ? 'block' : 'none'; if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>'; }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+        if(hasFilters && !movieRegion){
+            endpoint='/discover/movie';
+            params.sort_by=movieTab==='top_rated'?'vote_average.desc':'popularity.desc';
+            if(movieYear){ if(movieYear.includes('-')){ const [s,e]=movieYear.split('-'); params['primary_release_date.gte']=`${s}-01-01`; params['primary_release_date.lte']=`${e}-12-31`; } else params.primary_release_year=movieYear; }
+            if(movieGenre) params.with_genres=movieGenre;
+            if(movieCompany) params.with_companies=movieCompany;
+        } else {
+            if(movieYear && !movieRegion) params.primary_release_year=movieYear;
+            if(movieGenre && !movieRegion) params.with_genres=movieGenre;
+            if(movieCompany && !movieRegion) params.with_companies=movieCompany;
+        }
+        try{
+            const d=await tmdb(endpoint,params);
+            if(reset) grid.innerHTML='';
+            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'movie')));
+            document.getElementById('btn-more-movies').style.display = d.page < d.total_pages ? 'block' : 'none';
+            if(!grid.children.length) grid.innerHTML='<div class="loading-msg">😕 لا توجد نتائج</div>';
+        }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
-    document.getElementById('movie-quick-tabs').addEventListener('click',e=>{ const chip=e.target.closest('.filter-chip'); if(!chip)return; document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active')); chip.classList.add('active'); movieTab=chip.dataset.tab; moviePage=1; loadMoviesGrid(true); });
+    document.getElementById('movie-quick-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        movieTab=chip.dataset.tab;
+        movieRegion=''; // إلغاء الفلتر الإقليمي
+        document.querySelectorAll('#movie-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        moviePage=1; loadMoviesGrid(true);
+    });
+    document.getElementById('movie-region-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#movie-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        movieRegion=chip.dataset.region;
+        // إلغاء تفعيل التبويبات الرئيسية
+        document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        moviePage=1; loadMoviesGrid(true);
+    });
     document.getElementById('movie-year-select').addEventListener('change',function(){ movieYear=this.value; moviePage=1; loadMoviesGrid(true); });
     document.getElementById('movie-genre-select').addEventListener('change',function(){ movieGenre=this.value; moviePage=1; loadMoviesGrid(true); });
     document.getElementById('movie-company-select').addEventListener('change',function(){ movieCompany=this.value; moviePage=1; loadMoviesGrid(true); });
@@ -424,18 +464,61 @@
         document.getElementById('series-year-select').value=seriesYear;
         document.getElementById('series-genre-select').value=seriesGenre;
         document.getElementById('series-company-select').value=seriesCompany;
-        seriesPage=1; loadSeriesGrid(true);
+        seriesPage=1;
+        document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c => c.classList.remove('active'));
+        document.querySelector(`#series-quick-tabs .filter-chip[data-tab="${seriesTab}"]`)?.classList.add('active');
+        loadSeriesGrid(true);
     }
     async function loadSeriesGrid(reset=false){
         const grid=document.getElementById('grid-series');
         if(reset) grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(8);
-        let endpoint='/tv/'+seriesTab, params={page:seriesPage};
+        let endpoint, params={page:seriesPage};
+
+        if(seriesRegion && seriesRegionMap[seriesRegion]){
+            endpoint='/discover/tv';
+            const region = seriesRegionMap[seriesRegion];
+            params.sort_by='popularity.desc';
+            params.with_origin_country = region.origin_country;
+            params.with_original_language = region.original_language;
+        } else {
+            endpoint='/tv/'+seriesTab;
+        }
         const hasFilters = seriesYear||seriesGenre||seriesCompany;
-        if(hasFilters){ endpoint='/discover/tv'; params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc'; if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; } if(seriesGenre) params.with_genres=seriesGenre; if(seriesCompany) params.with_companies=seriesCompany; }
-        else { if(seriesYear) params.first_air_date_year=seriesYear; if(seriesGenre) params.with_genres=seriesGenre; if(seriesCompany) params.with_companies=seriesCompany; }
-        try{ const d=await tmdb(endpoint,params); if(reset) grid.innerHTML=''; d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv'))); document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none'; }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
+        if(hasFilters && !seriesRegion){
+            endpoint='/discover/tv';
+            params.sort_by=seriesTab==='top_rated'?'vote_average.desc':'popularity.desc';
+            if(seriesYear){ if(seriesYear.includes('-')){ const [s,e]=seriesYear.split('-'); params['first_air_date.gte']=`${s}-01-01`; params['first_air_date.lte']=`${e}-12-31`; } else params.first_air_date_year=seriesYear; }
+            if(seriesGenre) params.with_genres=seriesGenre;
+            if(seriesCompany) params.with_companies=seriesCompany;
+        } else {
+            if(seriesYear && !seriesRegion) params.first_air_date_year=seriesYear;
+            if(seriesGenre && !seriesRegion) params.with_genres=seriesGenre;
+            if(seriesCompany && !seriesCompany) params.with_companies=seriesCompany;
+        }
+        try{
+            const d=await tmdb(endpoint,params);
+            if(reset) grid.innerHTML='';
+            d.results.filter(m=>m.poster_path).forEach(m=>grid.appendChild(createCard(m,'tv')));
+            document.getElementById('btn-more-series').style.display = d.page < d.total_pages ? 'block' : 'none';
+        }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
-    document.getElementById('series-quick-tabs').addEventListener('click',e=>{ const chip=e.target.closest('.filter-chip'); if(!chip)return; document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active')); chip.classList.add('active'); seriesTab=chip.dataset.tab; seriesPage=1; loadSeriesGrid(true); });
+    document.getElementById('series-quick-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        seriesTab=chip.dataset.tab;
+        seriesRegion='';
+        document.querySelectorAll('#series-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        seriesPage=1; loadSeriesGrid(true);
+    });
+    document.getElementById('series-region-tabs').addEventListener('click',e=>{
+        const chip=e.target.closest('.filter-chip'); if(!chip)return;
+        document.querySelectorAll('#series-region-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        chip.classList.add('active');
+        seriesRegion=chip.dataset.region;
+        document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
+        seriesPage=1; loadSeriesGrid(true);
+    });
     document.getElementById('series-year-select').addEventListener('change',function(){ seriesYear=this.value; seriesPage=1; loadSeriesGrid(true); });
     document.getElementById('series-genre-select').addEventListener('change',function(){ seriesGenre=this.value; seriesPage=1; loadSeriesGrid(true); });
     document.getElementById('series-company-select').addEventListener('change',function(){ seriesCompany=this.value; seriesPage=1; loadSeriesGrid(true); });
@@ -477,7 +560,10 @@
             else document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">😕 لا رابط</div>';
         }catch{ document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ خطأ</div>'; }
     }
-    function openPlayerModal(imdbId,type,detail){ const url=getStreamUrl(imdbId,type), sandbox='allow-scripts allow-same-origin'; document.getElementById('modal-player-wrap').innerHTML=`<div style="position:relative;"><div style="width:100%;aspect-ratio:16/9;background:#000;"><iframe src="${url}" sandbox="${sandbox}" allowfullscreen style="width:100%;height:100%;border:none;"></iframe></div></div>`; }
+    function openPlayerModal(imdbId,type,detail){
+        const url=getStreamUrl(imdbId,type), sandbox='allow-scripts allow-same-origin';
+        document.getElementById('modal-player-wrap').innerHTML=`<div style="position:relative;"><div style="width:100%;aspect-ratio:16/9;background:#000;"><iframe src="${url}" sandbox="${sandbox}" allowfullscreen style="width:100%;height:100%;border:none;"></iframe></div></div>`;
+    }
     function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow=''; document.getElementById('modal-player-wrap').innerHTML=''; }
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(document.getElementById('modal-overlay').classList.contains('open')) closeModal(); } });
 
@@ -485,69 +571,7 @@
     async function loadHomeMovies(){ const grid=document.getElementById('grid-home-movies'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/movie/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'movie'))); }catch{} }
     async function loadHomeTV(){ const grid=document.getElementById('grid-home-tv'); grid.innerHTML='<div class="skel skel-poster"></div>'.repeat(6); try{ const d=await tmdb('/tv/popular'); grid.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>grid.appendChild(createCard(m,'tv'))); }catch{} }
     async function loadTopRated(){ const row=document.getElementById('top-rated-row'); row.innerHTML='<div class="skel skel-poster" style="min-width:110px;"></div>'.repeat(5); try{ const d=await tmdb('/movie/top_rated'); row.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,12).forEach(m=>row.appendChild(createCard(m,'movie'))); }catch{} }
-// متغيرات الحالة الإقليمية
-let currentRegion = 'arabic_movies';
-let regionPage = 1;
 
-// خريطة الأقسام الإقليمية
-const regionMap = {
-    arabic_movies: { type: 'movie', origin_country: 'EG', original_language: 'ar', label: 'أفلام عربية' },
-    korean_movies: { type: 'movie', origin_country: 'KR', original_language: 'ko', label: 'أفلام كورية' },
-    turkish_movies: { type: 'movie', origin_country: 'TR', original_language: 'tr', label: 'أفلام تركية' },
-    indian_movies: { type: 'movie', origin_country: 'IN', original_language: 'hi', label: 'أفلام هندية' },
-    arabic_tv: { type: 'tv', origin_country: 'EG', original_language: 'ar', label: 'مسلسلات عربية' },
-    korean_tv: { type: 'tv', origin_country: 'KR', original_language: 'ko', label: 'مسلسلات كورية' },
-    turkish_tv: { type: 'tv', origin_country: 'TR', original_language: 'tr', label: 'مسلسلات تركية' }
-};
-
-// دالة تحميل محتوى إقليمي
-async function loadRegionGrid(reset = false) {
-    const grid = document.getElementById('grid-region');
-    const btnMore = document.getElementById('btn-more-region');
-    const region = regionMap[currentRegion];
-    
-    if (reset) {
-        grid.innerHTML = '<div class="skel skel-poster"></div>'.repeat(8);
-        regionPage = 1;
-    }
-    
-    const endpoint = region.type === 'movie' ? '/discover/movie' : '/discover/tv';
-    const params = {
-        page: regionPage,
-        with_origin_country: region.origin_country,
-        with_original_language: region.original_language,
-        sort_by: 'popularity.desc'
-    };
-    
-    try {
-        const d = await tmdb(endpoint, params);
-        if (reset) grid.innerHTML = '';
-        d.results.filter(m => m.poster_path).forEach(m => grid.appendChild(createCard(m, region.type)));
-        btnMore.style.display = d.page < d.total_pages ? 'block' : 'none';
-        if (!grid.children.length) grid.innerHTML = '<div class="loading-msg">😕 لا توجد نتائج</div>';
-    } catch {
-        if (reset) grid.innerHTML = '<div class="loading-msg">⚠️ خطأ</div>';
-    }
-}
-
-// مستمعو الأحداث
-document.getElementById('region-tabs').addEventListener('click', e => {
-    const chip = e.target.closest('.filter-chip');
-    if (!chip) return;
-    document.querySelectorAll('#region-tabs .filter-chip').forEach(c => c.classList.remove('active'));
-    chip.classList.add('active');
-    currentRegion = chip.dataset.region;
-    loadRegionGrid(true);
-});
-
-document.getElementById('btn-more-region').addEventListener('click', () => {
-    regionPage++;
-    loadRegionGrid(false);
-});
-
-// تحميل القسم الافتراضي (أفلام عربية) عند بدء الصفحة الرئيسية
-// أضف هذا السطر داخل دالة init() بعد الأسطر الموجودة:
-// loadRegionGrid(true);
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
