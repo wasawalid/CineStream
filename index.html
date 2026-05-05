@@ -260,7 +260,6 @@
     const STREAM_BASE = 'https://streamimdb.ru/embed';
     const getStreamUrl = (imdbId, type) => type === 'tv' ? `${STREAM_BASE}/tv/${imdbId}` : `${STREAM_BASE}/movie/${imdbId}`;
 
-    // قائمة الشركات (تتضمن Netflix)
     const popularCompanies = [
         {id:2, name:'Disney'}, {id:3, name:'Pixar'}, {id:4, name:'Paramount'}, {id:5, name:'Columbia'},
         {id:7, name:'DreamWorks'}, {id:8, name:'Lionsgate'}, {id:12, name:'New Line Cinema'},
@@ -270,10 +269,10 @@
         {id:174, name:'Warner Bros.'}, {id:213, name:'Netflix'}
     ];
 
-    // أرقام Netflix المتعددة لضمان ظهور كل المحتوى
+    // أرقام Netflix المتعددة - الفصل بعلامة | (pipe)
     const netflixIds = {
-        movie: [213, 2680, 127782, 117321, 125281],
-        tv: [213, 2680, 127782]
+        movie: '213|2680|127782|117321|125281',
+        tv: '213|2680|127782'
     };
 
     let sliderMovies=[], sliderIndex=0, sliderTimer=null;
@@ -419,7 +418,7 @@
         }
         if(movieGenre) params.with_genres=movieGenre;
         if(movieCompany) {
-            if(movieCompany == 213) params.with_companies = netflixIds.movie.join(',');
+            if(movieCompany == 213) params.with_companies = netflixIds.movie; // استخدم السلسلة مع |
             else params.with_companies = movieCompany;
         }
 
@@ -487,7 +486,7 @@
         }
         if(seriesGenre) params.with_genres=seriesGenre;
         if(seriesCompany) {
-            if(seriesCompany == 213) params.with_networks = netflixIds.tv.join(',');
+            if(seriesCompany == 213) params.with_networks = netflixIds.tv; // استخدم السلسلة مع |
             else params.with_companies = seriesCompany;
         }
 
