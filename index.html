@@ -145,7 +145,7 @@
     </style>
 </head>
 <body>
-<header id="app-header"><div class="header-logo">🎬 CineStreamV1 </div><button class="header-btn" id="global-search-btn">🔍</button></header>
+<header id="app-header"><div class="header-logo">🎬 CineStream</div><button class="header-btn" id="global-search-btn">🔍</button></header>
 
 <div id="app-content" class="home-view">
     <!-- HOME -->
@@ -254,12 +254,13 @@
 <div id="toast"></div>
 
 <script>
-    const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // ⚠️ استبدل بمفتاحك الشخصي
+    const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // استبدل بمفتاحك
     const TMDB = 'https://api.themoviedb.org/3';
     const IMG = 'https://image.tmdb.org/t/p';
     const STREAM_BASE = 'https://streamimdb.ru/embed';
     const getStreamUrl = (imdbId, type) => type === 'tv' ? `${STREAM_BASE}/tv/${imdbId}` : `${STREAM_BASE}/movie/${imdbId}`;
 
+    // قائمة الشركات (تتضمن Netflix)
     const popularCompanies = [
         {id:2, name:'Disney'}, {id:3, name:'Pixar'}, {id:4, name:'Paramount'}, {id:5, name:'Columbia'},
         {id:7, name:'DreamWorks'}, {id:8, name:'Lionsgate'}, {id:12, name:'New Line Cinema'},
@@ -269,7 +270,12 @@
         {id:174, name:'Warner Bros.'}, {id:213, name:'Netflix'}
     ];
 
-    // حالة التطبيق
+    // أرقام Netflix المتعددة لضمان ظهور كل المحتوى
+    const netflixIds = {
+        movie: [213, 2680, 127782, 117321, 125281],
+        tv: [213, 2680, 127782]
+    };
+
     let sliderMovies=[], sliderIndex=0, sliderTimer=null;
     let allGenres=[];
     let savedItems=JSON.parse(localStorage.getItem('cs_saved')||'[]');
@@ -281,7 +287,6 @@
     let seriesYear='', seriesGenre='', seriesCompany='', seriesPage=1;
     let searchTimeout;
 
-    // دوال مساعدة
     function showToast(m,d=2000){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),d); }
     async function tmdb(path,params={}){ const q=new URLSearchParams({api_key:TMDB_KEY,language:'ar',...params}); const r=await fetch(`${TMDB}${path}?${q}`); if(!r.ok)throw new Error(`TMDB ${r.status}`); return r.json(); }
     async function getImdbId(id,type){ try{ const d=await tmdb(`/${type}/${id}/external_ids`); return d.imdb_id; }catch{return null;} }
@@ -337,7 +342,7 @@
             sliderMovies=d.results.filter(m=>m.backdrop_path&&(m.title||m.name)&&m.overview).slice(0,7);
             if(!sliderMovies.length){ const d2=await tmdb('/movie/popular'); sliderMovies=d2.results.filter(m=>m.backdrop_path&&m.overview).slice(0,7); }
             renderSlider(); startAutoSlide();
-        }catch(e){ document.getElementById('hero-slider').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#6b7280;">🎬 جار التحميل...</div>'; }
+        }catch(e){ document.getElementById('hero-slider').innerHTML='<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#6b7280;">🎬 جار التحميل...</div>'; }
     }
     function renderSlider(){
         const track=document.getElementById('slider-track'), dots=document.getElementById('slider-dots');
@@ -413,7 +418,10 @@
             else params.primary_release_year=movieYear;
         }
         if(movieGenre) params.with_genres=movieGenre;
-        if(movieCompany) params.with_companies=movieCompany;
+        if(movieCompany) {
+            if(movieCompany == 213) params.with_companies = netflixIds.movie.join(',');
+            else params.with_companies = movieCompany;
+        }
 
         try{
             const d=await tmdb(endpoint,params);
@@ -424,7 +432,6 @@
         }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
 
-    // مستمعات الأفلام
     document.getElementById('movie-quick-tabs').addEventListener('click',e=>{
         const chip=e.target.closest('.filter-chip'); if(!chip)return;
         document.querySelectorAll('#movie-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
@@ -479,7 +486,10 @@
             else params.first_air_date_year=seriesYear;
         }
         if(seriesGenre) params.with_genres=seriesGenre;
-        if(seriesCompany) params.with_companies=seriesCompany;
+        if(seriesCompany) {
+            if(seriesCompany == 213) params.with_networks = netflixIds.tv.join(',');
+            else params.with_companies = seriesCompany;
+        }
 
         try{
             const d=await tmdb(endpoint,params);
@@ -489,7 +499,6 @@
         }catch{ if(reset) grid.innerHTML='<div class="loading-msg">⚠️ خطأ</div>'; }
     }
 
-    // مستمعات المسلسلات
     document.getElementById('series-quick-tabs').addEventListener('click',e=>{
         const chip=e.target.closest('.filter-chip'); if(!chip)return;
         document.querySelectorAll('#series-quick-tabs .filter-chip').forEach(c=>c.classList.remove('active'));
@@ -559,7 +568,7 @@
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
-        console.log('🎬 CineStream جاهز مع فلاتر إقليمية منسدلة وNetflix');
+        console.log('🎬 CineStream جاهز مع Netflix وفلاتر إقليمية منسدلة');
     }
     init();
 </script>
