@@ -118,7 +118,11 @@
         #modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:.3s; backdrop-filter:blur(4px); }
         #modal-overlay.open { opacity:1; pointer-events:auto; }
         #modal-box { background:var(--surface); border-radius:18px; width:90%; max-width:900px; max-height:92vh; overflow-y:auto; border:1px solid var(--border); }
-        #modal-player-wrap { width:100%; aspect-ratio:16/9; background:#000; }
+        #modal-player-wrap { width:100%; background:#000; }
+        .server-bar { display:flex; gap:6px; flex-wrap:wrap; padding:10px 14px; background:var(--surface2); border-top:1px solid var(--border); align-items:center; }
+        .server-bar .lbl { font-size:.7rem; color:var(--text-muted); margin-left:4px; }
+        .server-btn { background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:16px; padding:5px 14px; font-size:.7rem; cursor:pointer; font-family:'Cairo'; transition:.2s; }
+        .server-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
         #modal-details { padding:16px; }
         .modal-top { display:flex; justify-content:space-between; align-items:flex-start; }
         #modal-movie-title { font-size:1.1rem; font-weight:900; color:var(--text-bright); }
@@ -127,7 +131,7 @@
         .tag { background:var(--card); border:1px solid var(--border); padding:3px 10px; font-size:.68rem; border-radius:6px; color:var(--text-muted); }
         .tag.gold { color:var(--gold); border-color:rgba(240,192,64,.25); }
         #modal-overview-text { color:#b0b8c8; font-size:.8rem; line-height:1.7; }
-        .empty-state { text-align:center; padding:40px; color:var(--text-dim); font-size:.8rem; }
+        .empty-state, .loading-msg { text-align:center; padding:40px; color:var(--text-dim); font-size:.8rem; }
         .skel { background:linear-gradient(100deg, var(--card) 25%, var(--surface2) 50%, var(--card) 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:var(--radius); }
         .skel-poster { width:100%; aspect-ratio:2/3; border-radius:var(--radius); }
         @keyframes shimmer { to { background-position:-200% 0; } }
@@ -170,7 +174,7 @@
         </div>
     </div>
 
-    <!-- MOVIES (قسم إقليمي كقائمة منسدلة) -->
+    <!-- MOVIES -->
     <div class="view-panel" id="view-movies">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>🎬 أفلام</div></div>
@@ -197,7 +201,7 @@
         </div>
     </div>
 
-    <!-- SERIES (قسم إقليمي كقائمة منسدلة) -->
+    <!-- SERIES -->
     <div class="view-panel" id="view-series">
         <div class="content-area">
             <div class="section-head"><div class="section-title"><span class="icon-bar"></span>📺 مسلسلات</div></div>
@@ -257,8 +261,25 @@
     const TMDB_KEY = '8265bd1679663a7ea12ac168da84d2e8'; // استبدل بمفتاحك
     const TMDB = 'https://api.themoviedb.org/3';
     const IMG = 'https://image.tmdb.org/t/p';
-    const STREAM_BASE = 'https://streamimdb.ru/embed';
-    const getStreamUrl = (imdbId, type) => type === 'tv' ? `${STREAM_BASE}/tv/${imdbId}` : `${STREAM_BASE}/movie/${imdbId}`;
+
+    // ===== خوادم التشغيل =====
+    // لإضافة خادم: انسخ القالب المعلّق أسفله. اجعل sandbox:false للخوادم التي تكتشف الـ sandbox.
+    const SERVERS = [
+        {
+            name: 'خادم 1',
+            sandbox: false,
+            movie: id => `https://streamimdb.ru/embed/movie/${id}`,
+            tv:    id => `https://streamimdb.ru/embed/tv/${id}`
+        },
+        // {
+        //     name: 'خادم 2',
+        //     sandbox: false,
+        //     movie: id => `https://EXAMPLE.com/embed/movie/${id}`,
+        //     tv:    id => `https://EXAMPLE.com/embed/tv/${id}`
+        // },
+    ];
+    let currentServer = Math.min(parseInt(localStorage.getItem('cs_server') || '0', 10) || 0, SERVERS.length - 1);
+    let playerState = { imdbId: null, type: null };
 
     const popularCompanies = [
         {id:2, name:'Disney'}, {id:3, name:'Pixar'}, {id:4, name:'Paramount'}, {id:5, name:'Columbia'},
@@ -269,7 +290,6 @@
         {id:174, name:'Warner Bros.'}, {id:213, name:'Netflix'}
     ];
 
-    // رقم مزود خدمة Netflix في TMDB
     const NETFLIX_WATCH_PROVIDER = '8';
 
     let sliderMovies=[], sliderIndex=0, sliderTimer=null;
@@ -355,7 +375,7 @@
     function goToSlide(i){ if(i===sliderIndex)return; document.querySelectorAll('#slider-track .slide')[sliderIndex]?.classList.remove('active'); document.querySelectorAll('#slider-dots .slider-dot')[sliderIndex]?.classList.remove('active'); sliderIndex=i; document.querySelectorAll('#slider-track .slide')[sliderIndex]?.classList.add('active'); document.querySelectorAll('#slider-dots .slider-dot')[sliderIndex]?.classList.add('active'); resetSliderTimer(); }
     function startAutoSlide(){ sliderTimer=setInterval(()=>goToSlide((sliderIndex+1)%sliderMovies.length),5000); }
     function resetSliderTimer(){ clearInterval(sliderTimer); startAutoSlide(); }
-    async function playFromSlider(id,type){ showToast('⏳ جار التحميل...'); const imdb=await getImdbId(id,type); if(imdb){ openPlayerModal(imdb,type,{id,title:'',poster_path:'',backdrop_path:'',overview:'',vote_average:0}); } else {showToast('😕 لا رابط'); openModal(id,type);} }
+    async function playFromSlider(id,type){ showToast('⏳ جار التحميل...'); const imdb=await getImdbId(id,type); if(imdb){ openModal(parseInt(id),type); } else {showToast('😕 لا رابط'); openModal(parseInt(id),type);} }
 
     function switchView(view){
         if(currentView===view)return;
@@ -415,11 +435,10 @@
         }
         if(movieGenre) params.with_genres=movieGenre;
 
-        // معالجة اختيار Netflix عبر مزود الخدمة
         if(movieCompany) {
             if(movieCompany == 213) {
                 params.with_watch_providers = NETFLIX_WATCH_PROVIDER;
-                params.watch_region = 'US'; // منطقة المشاهدة (يمكن تغييرها)
+                params.watch_region = 'US';
             } else {
                 params.with_companies = movieCompany;
             }
@@ -489,7 +508,6 @@
         }
         if(seriesGenre) params.with_genres=seriesGenre;
 
-        // معالجة اختيار Netflix عبر مزود الخدمة للمسلسلات
         if(seriesCompany) {
             if(seriesCompany == 213) {
                 params.with_watch_providers = NETFLIX_WATCH_PROVIDER;
@@ -557,15 +575,42 @@
             document.getElementById('modal-overview-text').textContent=detail.overview||'لا يوجد وصف.';
             const tags=document.getElementById('modal-tags'); const addTag=(t,c='')=>{ if(t){ const s=document.createElement('span'); s.className=`tag ${c}`; s.textContent=t; tags.appendChild(s); }};
             addTag(`⭐ ${rating}`,'gold'); addTag(year); addTag(type==='tv'?'📺 مسلسل':'🎬 فيلم');
-            if(imdbId){ openPlayerModal(imdbId,type,detail); addToContinueWatching({id,type,title,poster:detail.poster_path?`${IMG}/w342${detail.poster_path}`:''}); }
+            if(imdbId){ openPlayerModal(imdbId,type); addToContinueWatching({id,type,title,poster:detail.poster_path?`${IMG}/w342${detail.poster_path}`:''}); }
             else document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">😕 لا رابط</div>';
         }catch{ document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ خطأ</div>'; }
     }
-    function openPlayerModal(imdbId,type,detail){
-        const url=getStreamUrl(imdbId,type), sandbox='allow-scripts allow-same-origin';
-        document.getElementById('modal-player-wrap').innerHTML=`<div style="position:relative;"><div style="width:100%;aspect-ratio:16/9;background:#000;"><iframe src="${url}" sandbox="${sandbox}" allowfullscreen style="width:100%;height:100%;border:none;"></iframe></div></div>`;
+
+    // ===== المشغّل مع تبديل الخوادم =====
+    function openPlayerModal(imdbId, type){
+        playerState = { imdbId, type };
+        renderPlayer();
     }
-    function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); document.body.style.overflow=''; document.getElementById('modal-player-wrap').innerHTML=''; }
+    function renderPlayer(){
+        const { imdbId, type } = playerState;
+        if(!imdbId) return;
+        const s = SERVERS[currentServer];
+        const url = s[type === 'tv' ? 'tv' : 'movie'](imdbId);
+        const sb = s.sandbox ? 'sandbox="allow-scripts allow-same-origin"' : '';
+        const btns = SERVERS.map((sv,i)=>`<button class="server-btn ${i===currentServer?'active':''}" data-i="${i}">${sv.name}</button>`).join('');
+        const wrap = document.getElementById('modal-player-wrap');
+        wrap.innerHTML = `
+            <div style="width:100%;aspect-ratio:16/9;background:#000;">
+                <iframe src="${url}" ${sb} allowfullscreen referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;"></iframe>
+            </div>
+            ${SERVERS.length>1?`<div class="server-bar"><span class="lbl">🖥️ الخادم:</span>${btns}</div>`:''}`;
+        wrap.querySelectorAll('.server-btn').forEach(b=>b.addEventListener('click',()=>{
+            currentServer = parseInt(b.dataset.i,10);
+            localStorage.setItem('cs_server', currentServer);
+            showToast('🔄 '+SERVERS[currentServer].name);
+            renderPlayer();
+        }));
+    }
+    function closeModal(){
+        document.getElementById('modal-overlay').classList.remove('open');
+        document.body.style.overflow='';
+        document.getElementById('modal-player-wrap').innerHTML='';
+        playerState = { imdbId:null, type:null };
+    }
     document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(document.getElementById('modal-overlay').classList.contains('open')) closeModal(); } });
 
     async function loadTrending(){ const row=document.getElementById('trending-row'); row.innerHTML='<div class="skel skel-poster" style="min-width:110px;"></div>'.repeat(5); try{ const d=await tmdb('/trending/all/day'); row.innerHTML=''; d.results.filter(m=>m.poster_path).slice(0,15).forEach(m=>row.appendChild(createCard(m,m.media_type||'movie'))); }catch{row.innerHTML='<div class="loading-msg">⚠️ خطأ</div>';} }
@@ -576,7 +621,7 @@
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
-        console.log('🎬 CineStream جاهز مع Netflix عبر مزود الخدمة');
+        console.log('🎬 CineStream جاهز');
     }
     init();
 </script>
