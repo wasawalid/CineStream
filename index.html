@@ -119,8 +119,9 @@
         #modal-overlay.open { opacity:1; pointer-events:auto; }
         #modal-box { background:var(--surface); border-radius:18px; width:90%; max-width:900px; max-height:92vh; overflow-y:auto; border:1px solid var(--border); }
         #modal-player-wrap { width:100%; background:#000; }
-        .server-bar { display:flex; gap:6px; flex-wrap:wrap; padding:10px 14px; background:var(--surface2); border-top:1px solid var(--border); align-items:center; }
+        .server-bar { display:flex; gap:6px; flex-wrap:wrap; padding:10px 14px; background:var(--surface2); border-top:1px solid var(--border); align-items:center; justify-content:center; }
         .server-bar .lbl { font-size:.7rem; color:var(--text-muted); margin-left:4px; }
+        .server-bar .filter-select { padding:5px 26px 5px 10px; font-size:.7rem; }
         .server-btn { background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:16px; padding:5px 14px; font-size:.7rem; cursor:pointer; font-family:'Cairo'; transition:.2s; }
         .server-btn.active { background:var(--accent); border-color:var(--accent); color:#fff; }
         #modal-details { padding:16px; }
@@ -262,23 +263,15 @@
     const TMDB = 'https://api.themoviedb.org/3';
     const IMG = 'https://image.tmdb.org/t/p';
 
-    // ===== خوادم التشغيل =====
-    // لإضافة خادم: انسخ القالب المعلّق أسفله. اجعل sandbox:false للخوادم التي تكتشف الـ sandbox.
+    // ===== خادم التشغيل (AutoEmbed فقط) =====
     const SERVERS = [
         {
-            name: 'خادم 1',
+            name: 'AutoEmbed',
             sandbox: false,
-            movie: id => `https://streamimdb.ru/embed/movie/${id}`,
-            tv:    id => `https://streamimdb.ru/embed/tv/${id}`
-        },
-        // {
-        //     name: 'خادم 2',
-        //     sandbox: false,
-        //     movie: id => `https://EXAMPLE.com/embed/movie/${id}`,
-        //     tv:    id => `https://EXAMPLE.com/embed/tv/${id}`
-        // },
+            movie: id => `https://autoembed.co/movie/imdb/${id}`,
+            tv: (id, season, episode) => `https://autoembed.co/tv/imdb/${id}-${season}-${episode}`
+        }
     ];
-    let currentServer = Math.min(parseInt(localStorage.getItem('cs_server') || '0', 10) || 0, SERVERS.length - 1);
     let playerState = { imdbId: null, type: null };
 
     const popularCompanies = [
@@ -575,12 +568,22 @@
             document.getElementById('modal-overview-text').textContent=detail.overview||'لا يوجد وصف.';
             const tags=document.getElementById('modal-tags'); const addTag=(t,c='')=>{ if(t){ const s=document.createElement('span'); s.className=`tag ${c}`; s.textContent=t; tags.appendChild(s); }};
             addTag(`⭐ ${rating}`,'gold'); addTag(year); addTag(type==='tv'?'📺 مسلسل':'🎬 فيلم');
-            if(imdbId){ openPlayerModal(imdbId,type); addToContinueWatching({id,type,title,poster:detail.poster_path?`${IMG}/w342${detail.poster_path}`:''}); }
+            if(imdbId){
+                if(type==='tv'){
+                    await openSeriesPlayerModal(imdbId, detail);
+                } else {
+                    openPlayerModal(imdbId, type);
+                }
+                addToContinueWatching({id,type,title,poster:detail.poster_path?`${IMG}/w342${detail.poster_path}`:''});
+            }
             else document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">😕 لا رابط</div>';
-        }catch{ document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ خطأ</div>'; }
+        }catch(e){
+            console.error(e);
+            document.getElementById('modal-player-wrap').innerHTML='<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ خطأ</div>';
+        }
     }
 
-    // ===== المشغّل مع تبديل الخوادم =====
+    // ===== مشغل الأفلام (AutoEmbed) =====
     function openPlayerModal(imdbId, type){
         playerState = { imdbId, type };
         renderPlayer();
@@ -588,23 +591,79 @@
     function renderPlayer(){
         const { imdbId, type } = playerState;
         if(!imdbId) return;
-        const s = SERVERS[currentServer];
-        const url = s[type === 'tv' ? 'tv' : 'movie'](imdbId);
+        const s = SERVERS[0];
+        const url = s.movie(imdbId);
         const sb = s.sandbox ? 'sandbox="allow-scripts allow-same-origin"' : '';
-        const btns = SERVERS.map((sv,i)=>`<button class="server-btn ${i===currentServer?'active':''}" data-i="${i}">${sv.name}</button>`).join('');
         const wrap = document.getElementById('modal-player-wrap');
         wrap.innerHTML = `
             <div style="width:100%;aspect-ratio:16/9;background:#000;">
                 <iframe src="${url}" ${sb} allowfullscreen referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;"></iframe>
-            </div>
-            ${SERVERS.length>1?`<div class="server-bar"><span class="lbl">🖥️ الخادم:</span>${btns}</div>`:''}`;
-        wrap.querySelectorAll('.server-btn').forEach(b=>b.addEventListener('click',()=>{
-            currentServer = parseInt(b.dataset.i,10);
-            localStorage.setItem('cs_server', currentServer);
-            showToast('🔄 '+SERVERS[currentServer].name);
-            renderPlayer();
-        }));
+            </div>`;
     }
+
+    // ===== مشغل المسلسلات مع اختيار الموسم والحلقة (AutoEmbed) =====
+    async function openSeriesPlayerModal(imdbId, seriesDetails){
+        const wrap = document.getElementById('modal-player-wrap');
+        wrap.innerHTML = '<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⏳ جارٍ جلب الحلقات...</div>';
+
+        try {
+            const totalSeasons = seriesDetails.number_of_seasons || 1;
+            let seasonOptions = '';
+            for (let i = 1; i <= totalSeasons; i++) {
+                seasonOptions += `<option value="${i}">الموسم ${i}</option>`;
+            }
+
+            wrap.innerHTML = `
+                <div style="width:100%;aspect-ratio:16/9;background:#000;">
+                    <iframe id="series-iframe" src="" allowfullscreen referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;"></iframe>
+                </div>
+                <div class="server-bar">
+                    <span class="lbl">📺 الموسم:</span>
+                    <select id="season-select" class="filter-select">${seasonOptions}</select>
+                    <span class="lbl">الحلقة:</span>
+                    <select id="episode-select" class="filter-select"><option value="">...</option></select>
+                </div>
+            `;
+
+            const iframe = document.getElementById('series-iframe');
+            const seasonSelect = document.getElementById('season-select');
+            const episodeSelect = document.getElementById('episode-select');
+
+            function playEpisode(season, episode) {
+                iframe.src = `https://autoembed.co/tv/imdb/${imdbId}-${season}-${episode}`;
+            }
+
+            async function updateEpisodes(seasonNumber) {
+                episodeSelect.innerHTML = '<option value="">جارٍ التحميل...</option>';
+                try {
+                    const seasonDetail = await tmdb(`/tv/${seriesDetails.id}/season/${seasonNumber}`);
+                    if (!seasonDetail.episodes || !seasonDetail.episodes.length) {
+                        episodeSelect.innerHTML = '<option value="">لا توجد حلقات</option>';
+                        return;
+                    }
+                    episodeSelect.innerHTML = seasonDetail.episodes.map(ep =>
+                        `<option value="${ep.episode_number}">الحلقة ${ep.episode_number}</option>`
+                    ).join('');
+                    playEpisode(seasonNumber, seasonDetail.episodes[0].episode_number);
+                } catch {
+                    episodeSelect.innerHTML = '<option value="">خطأ في التحميل</option>';
+                }
+            }
+
+            seasonSelect.addEventListener('change', (e) => updateEpisodes(e.target.value));
+            episodeSelect.addEventListener('change', (e) => {
+                const season = seasonSelect.value;
+                const episode = e.target.value;
+                if (season && episode) playEpisode(season, episode);
+            });
+
+            await updateEpisodes(1);
+        } catch (error) {
+            console.error(error);
+            wrap.innerHTML = '<div style="aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#6b7280;">⚠️ تعذر جلب بيانات المسلسل</div>';
+        }
+    }
+
     function closeModal(){
         document.getElementById('modal-overlay').classList.remove('open');
         document.body.style.overflow='';
@@ -621,7 +680,7 @@
     async function init(){
         await Promise.all([initSlider(), loadTrending(), loadHomeMovies(), loadHomeTV(), loadTopRated(), loadGenres()]);
         renderContinueView();
-        console.log('🎬 CineStream جاهز');
+        console.log('🎬 CineStream جاهز - AutoEmbed');
     }
     init();
 </script>
