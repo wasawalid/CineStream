@@ -757,13 +757,13 @@ window.openModal=async function(id,type){
  decorate();
  const f=$('#modal-box select')||$('.modal-close-btn');f&&f.focus({preventScroll:true});
 };
-window.closeModal=function(){history.state&&history.state.m?history.back():_close()};
-addEventListener('popstate',()=>{if($('#modal-overlay.open')){_close();lastFocus&&lastFocus.isConnected&&lastFocus.focus({preventScroll:true})}});
+let closing=false;window.closeModal=function(){if(!$('#modal-overlay.open'))return;if(history.state&&history.state.m){if(closing)return;closing=true;setTimeout(()=>closing=false,500);history.back()}else _close()};
+addEventListener('popstate',()=>{if($('#modal-overlay.open')&&!$('#modal-overlay.watching')){_close();lastFocus&&lastFocus.isConnected&&lastFocus.focus({preventScroll:true})}});
 function decorate(){
- $$('.sv-btn').forEach(b=>b.remove());
+ $$('.sv-save').forEach(b=>b.remove());
  const it=continueWatching[0],title=$('#modal-movie-title').textContent;
  if(!it||it.title!==title)return;
- const tg=$$('#modal-tags .tag'),b=mk('button',{class:'sv-btn'});
+ const tg=$$('#modal-tags .tag'),b=mk('button',{class:'sv-btn sv-save'});
  const refresh=()=>{const on=savedItems.some(s=>s.id===it.id&&s.type===it.type);b.textContent=on?'💔 إزالة من المحفوظات':'❤️ حفظ';b.classList.toggle('on',on)};
  b.onclick=()=>{toggleSaved({id:it.id,type:it.type,title:it.title,year:tg[1]?.textContent||'',rating:(tg[0]?.textContent||'').replace('⭐ ',''),poster:it.poster});refresh()};
  refresh();$('#modal-tags').after(b);
