@@ -879,5 +879,41 @@ const t=new URLSearchParams(location.search).get('t');
 if(t){const[ty,id]=t.split('-');if(/^(movie|tv)$/.test(ty)&&+id)setTimeout(()=>openModal(+id,ty),900)}
 })();
 </script>
+<script>
+(()=>{'use strict';
+const D=document,$=(s,r=D)=>r.querySelector(s),wrap=$('#modal-player-wrap');
+D.head.appendChild(Object.assign(D.createElement('style'),{textContent:`.pbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:10px 14px;background:var(--surface2);border-top:1px solid var(--border)}.pbar .sv-btn{margin:0}.pbar small{width:100%;text-align:center;color:var(--text-muted);font-size:.68rem}.tv .pbar .sv-btn{font-size:1rem;padding:10px 22px}.tv .pbar small{font-size:.9rem}`}));
+function step(n){
+ const es=$('#episode-select'),ss=$('#season-select');if(!es||!ss)return;
+ const fire=e=>e.dispatchEvent(new Event('change')),i=es.selectedIndex+n;
+ if(i>=0&&i<es.options.length&&es.options[i].value){es.selectedIndex=i;fire(es);showToast('▶ الحلقة '+es.options[i].value)}
+ else{const j=ss.selectedIndex+(n>0?1:-1);
+  if(j>=0&&j<ss.options.length){ss.selectedIndex=j;fire(ss);showToast('📺 '+ss.options[j].text)}
+  else showToast(n>0?'هذه آخر حلقة':'هذه أول حلقة')}
+}
+function ensure(){
+ const f=wrap.querySelector('iframe'),bar=$('.pbar');
+ if(!f){bar&&bar.remove();return}
+ if(bar)return;
+ const b=D.createElement('div');b.className='pbar';
+ const add=(t,fn,c='')=>{const x=D.createElement('button');x.className='sv-btn '+c;x.textContent=t;x.onclick=fn;b.append(x)};
+ if($('#episode-select')){add('⏮ الحلقة السابقة',()=>step(-1));add('الحلقة التالية ⏭',()=>step(1),'main')}
+ add('▶ التحكم بالمشغّل',()=>{wrap.querySelector('iframe').focus();showToast('الريموت الآن داخل المشغّل · اضغط رجوع مرة واحدة للعودة هنا',4000)});
+ add('⛶ ملء الشاشة',()=>{const x=wrap.querySelector('iframe');(x.requestFullscreen||x.webkitRequestFullscreen)?.call(x)});
+ if(D.documentElement.classList.contains('tv'))b.append(Object.assign(D.createElement('small'),{textContent:'داخل المشغّل: زر رجوع واحد يعيدك إلى هذه الأزرار، والثاني يغلق الفيلم'}));
+ wrap.after(b);
+}
+new MutationObserver(ensure).observe(wrap,{childList:true,subtree:true});
+/* زر الرجوع: إذا كان التركيز داخل المشغّل نعيده للأزرار بدل إغلاق الفيلم */
+addEventListener('popstate',e=>{
+ if($('#trailer-ov')||!$('#modal-overlay.open'))return;
+ const a=D.activeElement;
+ if(a&&a.tagName==='IFRAME'&&wrap.contains(a)){
+  history.pushState({m:1},'');e.stopImmediatePropagation();
+  const t=$('.pbar .sv-btn')||$('#modal-box select')||$('.modal-close-btn');t&&t.focus();
+ }
+},true);
+})();
+</script>
 </body>
 </html>
