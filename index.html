@@ -915,5 +915,87 @@ addEventListener('popstate',e=>{
 },true);
 })();
 </script>
+<script>
+(()=>{'use strict';
+const D=document,$=(s,r=D)=>r.querySelector(s),$$=(s,r=D)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ov=$('#modal-overlay'),wrap=$('#modal-player-wrap');
+D.head.appendChild(Object.assign(D.createElement('style'),{textContent:`
+#modal-overlay.watching #modal-box{display:none}
+#watch{position:fixed;inset:0;z-index:5;background:var(--bg-deep);overflow-y:auto;padding:calc(10px + env(safe-area-inset-top,0px)) clamp(10px,3vw,40px) 40px}
+#watch .sv-btn{margin:0}
+.w-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;max-width:1100px;margin-inline:auto}.w-top b{font-size:1rem;color:var(--text-bright)}
+.w-stage{width:min(100%,calc(66vh*16/9));margin:0 auto;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;border:1px solid var(--border)}
+.w-stage iframe{width:100%;height:100%;border:0}
+.w-msg{height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:.85rem}
+.w-ctrl,.w-chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:12px auto;max-width:1100px}
+.w-chips .sv-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}.w-chips.eps .sv-btn{min-width:46px}
+.wph{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#1a2338,#05070d)}
+.sv-btn.big{font-size:1rem;padding:14px 34px}
+.tv .w-ctrl .sv-btn,.tv .w-chips .sv-btn,.tv .w-top .sv-btn{font-size:1.05rem;padding:11px 22px}.tv .w-top b{font-size:1.4rem}`}));
+let cur=null,W=null,S=null;const open=()=>W&&!W.hidden;
+
+/* نافذة التفاصيل: زر «شاهد الآن» بدل التشغيل التلقائي */
+const ph=()=>{wrap.innerHTML='<div class="wph"><button class="sv-btn main big" id="wbtn">▶ شاهد الآن</button></div>';$('#wbtn').onclick=()=>watch(cur.id,cur.type);$('#wbtn').focus()};
+window.openPlayerModal=ph;window.openSeriesPlayerModal=async()=>ph();
+const prevOpen=window.openModal;
+window.openModal=async function(id,type){cur={id,type};await prevOpen(id,type);if(!open())$('#wbtn')?.focus({preventScroll:true})};
+
+/* صفحة المشاهدة */
+async function watch(id,type){
+ const title=$('#modal-movie-title').textContent;
+ if(!W){W=D.createElement('div');W.id='watch';ov.append(W)}
+ history.pushState({w:1},'');W.hidden=false;ov.classList.add('watching');
+ W.innerHTML=`<div class="w-top"><button class="sv-btn" id="w-back">→ رجوع</button><b>${esc(title)}</b></div><div class="w-stage" id="w-stage"><div class="w-msg">⏳ جارٍ التحضير...</div></div><div class="w-ctrl" id="w-ctrl"></div><div class="w-chips" id="w-seas"></div><div class="w-chips eps" id="w-eps"></div>`;
+ const st=$('#w-stage',W),ct=$('#w-ctrl',W),ifr=()=>$('iframe',st);
+ $('#w-back',W).onclick=()=>history.back();$('#w-back',W).focus();
+ const btn=(t,f,c='')=>{const b=D.createElement('button');b.className='sv-btn '+c;b.textContent=t;b.onclick=f;ct.append(b)};
+ let imdb;try{imdb=await getImdbId(id,type)}catch{}
+ if(!open())return;
+ if(!imdb){st.innerHTML='<div class="w-msg">😕 لا يوجد مصدر لهذا العمل</div>';return}
+ const frame=u=>{st.innerHTML=`<iframe src="${u}" ${SB_ATTR} allow="autoplay; fullscreen" allowfullscreen referrerpolicy="no-referrer"></iframe>`};
+ let go=()=>{};
+ if(type==='tv'){btn('⏮ السابقة',()=>go(-1));btn('التالية ⏭',()=>go(1),'main')}
+ btn('🎮 تحكم بالمشغّل',()=>{ifr()?.focus();showToast('الريموت الآن داخل المشغّل · رجوع مرة واحدة للعودة',4000)},type==='tv'?'':'main');
+ btn('⛶ ملء الشاشة',()=>{const f=ifr();(f?.requestFullscreen||f?.webkitRequestFullscreen)?.call(f)});
+ if(type!=='tv'){frame(SERVERS[0].movie(imdb));return}
+ let seasons=[],eps=[];
+ try{const d=await tmdb(`/tv/${id}`);seasons=(d.seasons||[]).filter(s=>s.season_number>0&&s.episode_count>0)}catch{}
+ if(!seasons.length)seasons=[{season_number:1}];
+ if(!open())return;
+ const seas=$('#w-seas',W),epsEl=$('#w-eps',W);
+ seas.innerHTML=seasons.map(s=>`<button class="sv-btn" data-s="${s.season_number}">الموسم ${s.season_number}</button>`).join('');
+ const mark=()=>{$$('[data-s]',seas).forEach(b=>b.classList.toggle('on',+b.dataset.s===S.s));$$('[data-e]',epsEl).forEach(b=>b.classList.toggle('on',+b.dataset.e===S.e))};
+ const play=(s,e)=>{S={s,e};frame(SERVERS[0].tv(imdb,s,e));mark();W.scrollTo({top:0});try{localStorage.setItem('cs_last_'+id,JSON.stringify(S))}catch{}};
+ const load=async(s,e)=>{
+  epsEl.innerHTML='<span class="w-msg">⏳</span>';let list=[];
+  try{list=(await tmdb(`/tv/${id}/season/${s}`)).episodes||[]}catch{}
+  if(!open())return;eps=list;
+  if(!list.length){epsEl.innerHTML='<span class="w-msg">لا توجد حلقات</span>';return}
+  epsEl.innerHTML=list.map(x=>`<button class="sv-btn" data-e="${x.episode_number}" title="${esc(x.name)}">${x.episode_number}</button>`).join('');
+  play(s,e==='last'?list[list.length-1].episode_number:list.some(x=>x.episode_number===e)?e:list[0].episode_number)};
+ seas.onclick=e=>{const b=e.target.closest('[data-s]');b&&load(+b.dataset.s)};
+ epsEl.onclick=e=>{const b=e.target.closest('[data-e]');b&&play(S.s,+b.dataset.e)};
+ go=n=>{const i=eps.findIndex(x=>x.episode_number===S.e)+n;
+  if(i>=0&&i<eps.length)return play(S.s,eps[i].episode_number);
+  const j=seasons.findIndex(x=>x.season_number===S.s)+(n>0?1:-1);
+  j>=0&&j<seasons.length?load(seasons[j].season_number,n>0?undefined:'last'):showToast(n>0?'هذه آخر حلقة':'هذه أول حلقة')};
+ let last=null;try{last=JSON.parse(localStorage.getItem('cs_last_'+id)||'null')}catch{}
+ const ok=last&&seasons.some(s=>s.season_number===last.s);
+ load(ok?last.s:seasons[0].season_number,ok?last.e:undefined);
+}
+function closeWatch(){if(!W)return;W.hidden=true;W.innerHTML='';ov.classList.remove('watching');$('#wbtn')?.focus()}
+
+/* رجوع: داخل المشغّل → يعيدك للأزرار، ثم يغلق صفحة المشاهدة ويرجع للتفاصيل */
+addEventListener('popstate',e=>{
+ if(!open())return;e.stopImmediatePropagation();
+ const a=D.activeElement;
+ if(a&&a.tagName==='IFRAME'&&W.contains(a)){history.pushState({w:1},'');($('#w-ctrl .sv-btn',W)||$('#w-back',W)).focus()}
+ else closeWatch();
+},true);
+D.addEventListener('keydown',e=>{if(!open())return;
+ if(/^(Escape|BrowserBack)$/.test(e.key)||e.keyCode===10009||e.keyCode===461||(e.key==='Backspace'&&e.target.tagName!=='INPUT')){e.preventDefault();e.stopPropagation();history.back()}},true);
+})();
+</script>
 </body>
 </html>
