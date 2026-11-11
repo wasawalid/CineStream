@@ -272,6 +272,8 @@
         }
     ];
     let playerState = { imdbId: null, type: null };
+    // حماية من النوافذ المنبثقة والتحويلات. لتعطيلها مؤقتاً إن لم يعمل المشغّل: أضف ?sandbox=0 للرابط
+    const SB_ATTR = location.search.includes('sandbox=0') ? '' : 'sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"';
 
     const popularCompanies = [
         {id:2, name:'Disney'}, {id:3, name:'Pixar'}, {id:4, name:'Paramount'}, {id:5, name:'Columbia'},
@@ -592,7 +594,7 @@
         if(!imdbId) return;
         const s = SERVERS[0];
         const url = s.movie(imdbId);
-        const sb = s.sandbox ? 'sandbox="allow-scripts allow-same-origin"' : '';
+        const sb = SB_ATTR;
         const wrap = document.getElementById('modal-player-wrap');
         wrap.innerHTML = `
             <div style="width:100%;aspect-ratio:16/9;background:#000;">
@@ -614,7 +616,7 @@
 
             wrap.innerHTML = `
                 <div style="width:100%;aspect-ratio:16/9;background:#000;">
-                    <iframe id="series-iframe" src="" allowfullscreen referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;"></iframe>
+                    <iframe id="series-iframe" src="" ${SB_ATTR} allowfullscreen referrerpolicy="no-referrer" style="width:100%;height:100%;border:none;"></iframe>
                 </div>
                 <div class="server-bar">
                     <span class="lbl">📺 الموسم:</span>
